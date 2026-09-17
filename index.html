@@ -1,0 +1,2152 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05040f">
+<title>Путь · Пробуждение</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  :root{
+    --bg-0:#05040f;--bg-2:#14103a;--bg-3:#1e1552;
+    --accent:#8b7cff;--accent-2:#4facfe;--accent-3:#f093fb;--accent-4:#f5576c;
+    --gold:#ffd166;--green:#4cd964;
+    --text:#f5f1ff;--text-dim:rgba(245,241,255,0.62);--text-soft:rgba(245,241,255,0.4);
+    --glass:rgba(255,255,255,0.055);--glass-border:rgba(255,255,255,0.1)
+  }
+  [data-theme="light"]{
+    --bg-0:#f8f5ff;--bg-2:#e5dcff;--bg-3:#d9cbff;
+    --text:#1a1440;--text-dim:rgba(26,20,64,0.6);--text-soft:rgba(26,20,64,0.4);
+    --glass:rgba(255,255,255,0.65);--glass-border:rgba(139,124,255,0.14)
+  }
+  [data-theme="cosmic"]{--bg-0:#0a0514;--bg-2:#1a0a2e;--bg-3:#2a0f4a;--accent:#ff6ec7;--accent-2:#8b5cf6}
+  [data-theme="zen"]{--bg-0:#0a1a14;--bg-2:#12261c;--bg-3:#1a3d2a;--accent:#4ade80;--accent-2:#a3e635}
+  html,body{
+    font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','Segoe UI',system-ui,sans-serif;
+    background:var(--bg-0);color:var(--text);min-height:100vh;overflow-x:hidden;
+    -webkit-font-smoothing:antialiased;letter-spacing:-0.01em;overscroll-behavior-y:none
+  }
+  #fractalCanvas{position:fixed;top:0;left:0;width:100vw;height:100vh;height:100dvh;z-index:0;pointer-events:none}
+  #bgOverlay{
+    position:fixed;inset:0;z-index:1;pointer-events:none;
+    background:
+      radial-gradient(ellipse at 20% 10%,rgba(139,124,255,0.25),transparent 55%),
+      radial-gradient(ellipse at 85% 40%,rgba(240,147,251,0.18),transparent 55%),
+      radial-gradient(ellipse at 50% 90%,rgba(79,172,254,0.22),transparent 60%),
+      linear-gradient(180deg,rgba(5,4,15,0.35) 0%,rgba(5,4,15,0.55) 50%,rgba(5,4,15,0.75) 100%)
+  }
+  [data-theme="light"] #bgOverlay{
+    background:
+      radial-gradient(ellipse at 20% 10%,rgba(139,124,255,0.18),transparent 55%),
+      radial-gradient(ellipse at 85% 40%,rgba(240,147,251,0.12),transparent 55%),
+      radial-gradient(ellipse at 50% 90%,rgba(79,172,254,0.15),transparent 60%),
+      linear-gradient(180deg,rgba(248,245,255,0.4) 0%,rgba(248,245,255,0.55) 50%,rgba(248,245,255,0.7) 100%)
+  }
+  .app{position:relative;z-index:2;max-width:580px;margin:0 auto;padding:20px 18px 120px}
+  #loading{
+    position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    background:#05040f;color:#f5f1ff;font-size:15px;z-index:9999;flex-direction:column;gap:20px;padding:30px;text-align:center
+  }
+  #loading.hidden{display:none}
+  #loading .spinner{width:48px;height:48px;border:3px solid rgba(139,124,255,0.2);border-top-color:#8b7cff;border-radius:50%;animation:spin 0.9s linear infinite}
+  #loading .err{color:#f5576c;font-size:13px;max-width:340px;line-height:1.5}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .header{padding:12px 0 24px}
+  .avatar-row{display:flex;align-items:center;gap:16px;margin-bottom:20px}
+  .avatar{
+    width:74px;height:74px;border-radius:50%;
+    background:conic-gradient(from 0deg,#8b7cff,#4facfe,#f093fb,#f5576c,#8b7cff);
+    display:flex;align-items:center;justify-content:center;font-size:36px;cursor:pointer;
+    border:2px solid rgba(255,255,255,0.2);
+    box-shadow:0 0 50px rgba(139,124,255,0.5),inset 0 0 20px rgba(255,255,255,0.1);
+    transition:transform 0.35s cubic-bezier(0.34,1.56,0.64,1);position:relative;flex-shrink:0
+  }
+  .avatar:active{transform:scale(0.92) rotate(-5deg)}
+  .avatar::after{content:'';position:absolute;inset:-10px;border-radius:50%;border:1.5px solid rgba(139,124,255,0.5);animation:pulseRing 3s ease-out infinite}
+  @keyframes pulseRing{0%{transform:scale(1);opacity:.9}100%{transform:scale(1.35);opacity:0}}
+  .level-info{flex:1;min-width:0}
+  .level-badge{
+    display:inline-block;padding:7px 16px;
+    background:linear-gradient(135deg,#8b7cff,#f093fb);border-radius:100px;
+    font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;
+    box-shadow:0 6px 24px rgba(240,147,251,0.45);color:#fff
+  }
+  .rank-title{font-size:12px;color:var(--text-dim);margin-top:8px;letter-spacing:3px;text-transform:uppercase;font-weight:700}
+  h1{
+    font-size:34px;margin:8px 0 16px;
+    background:linear-gradient(90deg,#4facfe,#8b7cff,#f093fb,#4facfe);
+    background-size:300% auto;-webkit-background-clip:text;background-clip:text;
+    -webkit-text-fill-color:transparent;font-weight:900;letter-spacing:-1.2px;
+    animation:gradientShift 6s linear infinite;line-height:1.1
+  }
+  @keyframes gradientShift{0%{background-position:0% center}100%{background-position:300% center}}
+  .xp-bar{height:22px;background:rgba(255,255,255,0.06);border-radius:100px;overflow:hidden;margin:0 0 8px;border:1px solid var(--glass-border);position:relative}
+  .xp-fill{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,#4facfe,#8b7cff,#f093fb);border-radius:100px;
+    transition:width .9s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow:0 0 30px rgba(139,124,255,0.7);position:relative;overflow:hidden
+  }
+  .xp-fill::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.55) 50%,transparent 100%);
+    animation:shimmer 2.2s infinite
+  }
+  @keyframes shimmer{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}
+  .xp-text{font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:22px}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:8px}
+  .stat{
+    text-align:center;padding:14px 8px;
+    background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)
+  }
+  .stat-value{
+    font-size:22px;font-weight:900;line-height:1;
+    background:linear-gradient(180deg,#f5f1ff,#8b7cff);
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent
+  }
+  .stat-label{color:var(--text-soft);font-size:9.5px;margin-top:6px;letter-spacing:1px;font-weight:800;text-transform:uppercase}
+  .tabs{
+    display:flex;gap:4px;margin:24px 0 20px;padding:6px;
+    background:var(--glass);border:1px solid var(--glass-border);border-radius:18px;
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+    overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch
+  }
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:0 0 auto;min-width:52px;padding:11px 12px;text-align:center;font-size:18px;
+    border-radius:13px;cursor:pointer;transition:all .28s cubic-bezier(0.34,1.56,0.64,1);
+    white-space:nowrap;color:var(--text-dim);font-weight:700;user-select:none
+  }
+  .tab.active{
+    background:linear-gradient(135deg,#8b7cff,#f093fb);color:#fff;
+    box-shadow:0 8px 24px rgba(139,124,255,0.5);transform:translateY(-2px)
+  }
+  .page{display:none}
+  .page.active{display:block;animation:pageIn .4s cubic-bezier(0.34,1.2,0.64,1)}
+  @keyframes pageIn{from{opacity:0;transform:translateY(16px) scale(.98)}to{opacity:1;transform:none}}
+  .section-title{
+    font-size:12px;margin:28px 0 14px;display:flex;align-items:center;gap:12px;
+    color:var(--text-dim);text-transform:uppercase;letter-spacing:2.5px;font-weight:800
+  }
+  .section-title::before{content:'';width:4px;height:20px;background:linear-gradient(180deg,#4facfe,#f093fb);border-radius:3px;box-shadow:0 0 16px rgba(139,124,255,0.6)}
+  .practice{
+    background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;padding:18px;margin-bottom:12px;
+    transition:all .3s cubic-bezier(0.34,1.56,0.64,1);position:relative;overflow:hidden;
+    backdrop-filter:blur(28px);-webkit-backdrop-filter:blur(28px);box-shadow:0 4px 16px rgba(0,0,0,.3)
+  }
+  .practice.done{background:linear-gradient(135deg,rgba(76,217,100,0.14),rgba(79,172,254,0.08));border-color:rgba(76,217,100,0.42);box-shadow:0 0 32px rgba(76,217,100,0.18)}
+  .practice.locked{opacity:.4;pointer-events:none;filter:grayscale(.4)}
+  .practice.mastered{background:linear-gradient(135deg,rgba(255,209,102,0.16),rgba(240,147,251,0.1));border-color:rgba(255,209,102,0.42)}
+  .practice-row{display:flex;align-items:center;gap:14px;cursor:pointer}
+  .practice-icon{
+    width:56px;height:56px;border-radius:18px;display:flex;align-items:center;justify-content:center;
+    font-size:26px;flex-shrink:0;transition:transform .3s;box-shadow:0 8px 24px rgba(0,0,0,.3)
+  }
+  .practice-row:active .practice-icon{transform:scale(.88) rotate(-6deg)}
+  .icon-disc{background:linear-gradient(135deg,#f5576c,#f093fb)}
+  .icon-breath{background:linear-gradient(135deg,#4facfe,#00f2fe)}
+  .icon-body{background:linear-gradient(135deg,#fa709a,#fee140)}
+  .icon-mind{background:linear-gradient(135deg,#a8edea,#8b7cff)}
+  .icon-spirit{background:linear-gradient(135deg,#ffd166,#f5576c)}
+  .icon-health{background:linear-gradient(135deg,#4cd964,#4facfe)}
+  .practice-info{flex:1;min-width:0}
+  .practice-name{font-size:15.5px;font-weight:800;margin-bottom:5px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .practice-desc{font-size:12.5px;color:var(--text-dim);line-height:1.45;font-weight:500}
+  .practice-meta{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .badge{padding:4px 10px;border-radius:100px;background:rgba(139,124,255,0.22);color:#b3a6ff;font-weight:800;font-size:10px;letter-spacing:.5px;text-transform:uppercase}
+  .badge.gold{background:rgba(255,209,102,0.22);color:var(--gold)}
+  .badge.blue{background:rgba(79,172,254,0.22);color:#7dc7ff}
+  .practice-xp{
+    font-size:14px;font-weight:900;color:#7dc7ff;padding:7px 13px;border-radius:100px;
+    background:rgba(79,172,254,0.15);flex-shrink:0;border:1px solid rgba(79,172,254,0.28)
+  }
+  .practice.done .practice-xp{color:#7ce68d;background:rgba(76,217,100,0.16);border-color:rgba(76,217,100,0.3)}
+  .practice-tiers{display:flex;gap:4px;margin-top:10px}
+  .tier-dot{flex:1;height:5px;border-radius:3px;background:rgba(255,255,255,0.1);transition:all .4s}
+  .tier-dot.filled{background:linear-gradient(90deg,#4facfe,#f093fb);box-shadow:0 0 10px rgba(139,124,255,0.7)}
+  .practice-actions{display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)}
+  .p-btn{
+    flex:1;padding:11px 10px;border-radius:12px;border:1px solid var(--glass-border);
+    background:rgba(255,255,255,0.05);color:var(--text);font-size:12px;font-weight:800;
+    cursor:pointer;transition:all .2s;white-space:nowrap;font-family:inherit
+  }
+  .p-btn:active{transform:scale(.95)}
+  .p-btn.upgrade{background:linear-gradient(135deg,rgba(240,147,251,0.32),rgba(139,124,255,0.32));color:#d8b5ff;border-color:rgba(240,147,251,0.45)}
+  .p-btn.downgrade{color:var(--text-soft)}
+  .p-btn.info{background:linear-gradient(135deg,rgba(79,172,254,0.28),rgba(139,124,255,0.28));color:#7dc7ff;border-color:rgba(79,172,254,0.42);flex:0 0 52px}
+  .p-btn:disabled{opacity:.28;cursor:not-allowed}
+  .path-step{
+    background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;padding:22px;margin-bottom:14px;
+    backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);position:relative;overflow:hidden;
+    box-shadow:0 4px 16px rgba(0,0,0,.3)
+  }
+  .path-step::before{content:'';position:absolute;left:0;top:0;bottom:0;width:5px;background:linear-gradient(180deg,#4facfe,#f093fb);opacity:.45}
+  .path-step.current{background:linear-gradient(135deg,rgba(240,147,251,0.16),rgba(139,124,255,0.1));border-color:rgba(240,147,251,0.5);box-shadow:0 0 42px rgba(240,147,251,0.22)}
+  .path-step.current::before{opacity:1}
+  .path-step.completed{background:linear-gradient(135deg,rgba(76,217,100,0.14),rgba(79,172,254,0.08));border-color:rgba(76,217,100,0.42)}
+  .path-step.completed::before{background:linear-gradient(180deg,#4cd964,#4facfe);opacity:.8}
+  .path-step.locked{opacity:.45}
+  .path-header{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+  .path-num{
+    width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#8b7cff,#f093fb);
+    display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0;
+    box-shadow:0 8px 24px rgba(139,124,255,0.45)
+  }
+  .path-step.completed .path-num{background:linear-gradient(135deg,#4cd964,#4facfe)}
+  .path-title{font-size:17px;font-weight:900;margin-bottom:4px}
+  .path-subtitle{font-size:11.5px;color:var(--text-dim);font-weight:700;letter-spacing:1.2px;text-transform:uppercase}
+  .path-desc{font-size:13px;color:var(--text-dim);line-height:1.65;margin-bottom:14px;font-weight:500}
+  .path-reqs{display:flex;flex-direction:column;gap:8px;margin-top:12px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.06)}
+  .path-req{display:flex;justify-content:space-between;font-size:12.5px;padding:8px 12px;background:rgba(255,255,255,0.03);border-radius:10px;font-weight:600}
+  .path-req.done{color:#7ce68d}
+  .path-req.pending{color:var(--text-dim)}
+  .quest{background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;padding:18px;margin-bottom:12px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 4px 16px rgba(0,0,0,.3)}
+  .quest.done{background:linear-gradient(135deg,rgba(76,217,100,0.15),rgba(79,172,254,0.08));border-color:rgba(76,217,100,0.4)}
+  .quest-icon{
+    width:54px;height:54px;border-radius:17px;background:linear-gradient(135deg,#8b7cff,#f093fb);
+    display:flex;align-items:center;justify-content:center;font-size:26px;flex-shrink:0;
+    box-shadow:0 8px 24px rgba(139,124,255,0.4)
+  }
+  .quest.done .quest-icon{background:linear-gradient(135deg,#4cd964,#4facfe)}
+  .quest-info{flex:1;min-width:0}
+  .quest-name{font-size:14.5px;font-weight:800;margin-bottom:4px}
+  .quest-desc{font-size:12.5px;color:var(--text-dim);font-weight:500}
+  .quest-reward{font-size:13px;font-weight:900;color:var(--gold);padding:7px 12px;border-radius:100px;background:rgba(255,209,102,0.15);border:1px solid rgba(255,209,102,0.32);flex-shrink:0}
+  .card-day{
+    background:linear-gradient(135deg,rgba(255,209,102,0.18),rgba(240,147,251,0.14));
+    border:1px solid rgba(255,209,102,0.45);border-radius:24px;padding:22px;margin-bottom:16px;
+    position:relative;overflow:hidden;box-shadow:0 0 42px rgba(255,209,102,0.22)
+  }
+  .card-day::before{content:'';position:absolute;top:-60%;right:-20%;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgba(255,209,102,0.35),transparent 70%);pointer-events:none}
+  .card-day-label{font-size:10.5px;letter-spacing:3px;text-transform:uppercase;font-weight:800;color:var(--gold);margin-bottom:10px}
+  .card-day-icon{font-size:52px;margin-bottom:12px}
+  .card-day-title{font-size:20px;font-weight:900;margin-bottom:8px;letter-spacing:-.3px}
+  .card-day-desc{font-size:13px;line-height:1.6;color:var(--text-dim);margin-bottom:14px;font-weight:500}
+  .card-day-reward{display:inline-block;padding:8px 14px;border-radius:100px;background:rgba(255,209,102,0.25);border:1px solid rgba(255,209,102,0.45);color:var(--gold);font-weight:900;font-size:13px}
+  .card-day.done{background:linear-gradient(135deg,rgba(76,217,100,0.2),rgba(79,172,254,0.14));border-color:rgba(76,217,100,0.45);box-shadow:0 0 42px rgba(76,217,100,0.22)}
+  .barrier-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;padding:20px;margin-bottom:14px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(0,0,0,.3)}
+  .barrier-card.active{background:linear-gradient(135deg,rgba(245,87,108,0.14),rgba(240,147,251,0.1));border-color:rgba(245,87,108,0.4);box-shadow:0 0 42px rgba(245,87,108,0.22)}
+  .barrier-card.cleared{background:linear-gradient(135deg,rgba(76,217,100,0.16),rgba(79,172,254,0.1));border-color:rgba(76,217,100,0.42)}
+  .barrier-card.locked{opacity:.55}
+  .barrier-head{display:flex;align-items:center;gap:16px;margin-bottom:14px}
+  .barrier-icon{width:68px;height:68px;border-radius:22px;background:linear-gradient(135deg,#8b7cff,#f5576c);display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0;box-shadow:0 10px 32px rgba(139,124,255,0.5)}
+  .barrier-card.active .barrier-icon{background:linear-gradient(135deg,#f5576c,#f093fb);box-shadow:0 10px 42px rgba(245,87,108,0.6)}
+  .barrier-card.cleared .barrier-icon{background:linear-gradient(135deg,#4cd964,#4facfe)}
+  .barrier-info{flex:1;min-width:0}
+  .barrier-name{font-size:17px;font-weight:900;margin-bottom:4px}
+  .barrier-tag{font-size:11.5px;color:var(--text-dim);font-weight:600}
+  .barrier-desc{font-size:13px;color:var(--text-dim);line-height:1.6;margin-bottom:16px;font-weight:500}
+  .barrier-progress-bar{height:14px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);margin-bottom:10px}
+  .barrier-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#f5576c,#f093fb,#8b7cff);border-radius:100px;transition:width .7s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 0 20px rgba(240,147,251,0.6)}
+  .barrier-card.cleared .barrier-progress-fill{background:linear-gradient(90deg,#4cd964,#4facfe)}
+  .barrier-progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);font-weight:700;margin-bottom:14px}
+  .barrier-hint{background:rgba(255,255,255,0.04);border-radius:14px;padding:14px;font-size:12.5px;color:var(--text-dim);line-height:1.6;border-left:3px solid #f093fb;font-weight:500}
+  .barrier-hint b{color:#f093fb;font-weight:800}
+  .dna-wrap{margin-top:14px;padding:18px;background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .dna-title{font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--text-dim);font-weight:800;margin-bottom:12px}
+  .dna-grid{display:grid;grid-template-columns:repeat(15,1fr);gap:3px}
+  .dna-cell{aspect-ratio:1;border-radius:3px;background:rgba(255,255,255,0.05);transition:all .2s}
+  .dna-cell.level-1{background:rgba(79,172,254,0.35);box-shadow:0 0 6px rgba(79,172,254,0.4)}
+  .dna-cell.level-2{background:rgba(139,124,255,0.55);box-shadow:0 0 8px rgba(139,124,255,0.5)}
+  .dna-cell.level-3{background:rgba(240,147,251,0.75);box-shadow:0 0 10px rgba(240,147,251,0.6)}
+  .dna-cell.level-4{background:linear-gradient(135deg,#ffd166,#f5576c);box-shadow:0 0 12px rgba(255,209,102,0.7)}
+  .dna-cell.today{border:2px solid #4facfe;box-shadow:0 0 14px rgba(79,172,254,0.9)}
+  .dna-legend{display:flex;gap:12px;margin-top:12px;font-size:10px;color:var(--text-soft);font-weight:700;flex-wrap:wrap}
+  .dna-legend span{display:flex;align-items:center;gap:4px}
+  .dna-legend .dot{width:10px;height:10px;border-radius:2px}
+  .goal-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;padding:22px;margin-bottom:14px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);position:relative;overflow:hidden}
+  .goal-card.active{background:linear-gradient(135deg,rgba(139,124,255,0.16),rgba(240,147,251,0.1));border-color:rgba(139,124,255,0.5);box-shadow:0 0 42px rgba(139,124,255,0.22)}
+  .goal-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:14px}
+  .goal-title{font-size:17px;font-weight:900;letter-spacing:-.3px;margin-bottom:6px}
+  .goal-deadline{font-size:12px;color:var(--text-dim);font-weight:600}
+  .goal-days{font-size:26px;font-weight:900;background:linear-gradient(180deg,#f5f1ff,#8b7cff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;line-height:1;text-align:right}
+  .goal-days-label{font-size:10px;color:var(--text-soft);font-weight:800;letter-spacing:1px;text-transform:uppercase;text-align:right;margin-top:2px}
+  .goal-progress-bar{height:14px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden;border:1px solid rgba(255,255,255,0.08);margin-bottom:8px}
+  .goal-progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#4facfe,#8b7cff,#f093fb);border-radius:100px;transition:width .7s;box-shadow:0 0 20px rgba(139,124,255,0.6)}
+  .goal-progress-text{display:flex;justify-content:space-between;font-size:12px;color:var(--text-dim);font-weight:700}
+  .mood-row{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin:14px 0}
+  .mood-btn{
+    aspect-ratio:1;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);
+    display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;
+    transition:all .2s;font-family:inherit
+  }
+  .mood-btn:active{transform:scale(.92)}
+  .mood-btn.selected{border-color:#8b7cff;background:rgba(139,124,255,0.25);box-shadow:0 0 20px rgba(139,124,255,0.5);transform:scale(1.05)}
+  .mood-history{display:flex;gap:6px;margin-top:14px;padding:14px;background:var(--glass);border-radius:16px;border:1px solid var(--glass-border);overflow-x:auto;scrollbar-width:none}
+  .mood-history::-webkit-scrollbar{display:none}
+  .mood-dot{flex-shrink:0;width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;background:rgba(255,255,255,0.05);border:1px solid var(--glass-border)}
+  .health-cat{background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;margin-bottom:12px;overflow:hidden;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .health-header{padding:18px 20px;cursor:pointer;display:flex;align-items:center;justify-content:space-between}
+  .health-title{display:flex;align-items:center;gap:14px;font-size:15.5px;font-weight:800}
+  .health-icon{width:46px;height:46px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+  .health-arrow{font-size:22px;color:var(--text-soft);transition:transform .35s cubic-bezier(0.34,1.56,0.64,1);font-weight:300}
+  .health-cat.open .health-arrow{transform:rotate(90deg)}
+  .health-body{max-height:0;overflow:hidden;transition:max-height .5s cubic-bezier(.4,0,.2,1)}
+  .health-cat.open .health-body{max-height:15000px}
+  .health-item{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.06);font-size:13px;line-height:1.65}
+  .health-item-title{font-size:15px;font-weight:800;margin-bottom:8px;color:#7dc7ff}
+  .health-item-what{color:var(--text-dim);margin-bottom:12px;font-weight:500}
+  .health-mechanism{background:rgba(245,87,108,0.08);border-left:3px solid #f5576c;border-radius:10px;padding:12px 14px;margin-bottom:12px;font-size:12.5px;line-height:1.6}
+  .health-mechanism b{color:#ff8296;font-weight:800;display:block;margin-bottom:6px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+  .health-steps{background:rgba(76,217,100,0.08);border-left:3px solid #4cd964;border-radius:10px;padding:12px 14px;margin-bottom:12px}
+  .health-steps b{color:#7ce68d;font-weight:800;display:block;margin-bottom:8px;font-size:11px;letter-spacing:1px;text-transform:uppercase}
+  .health-step{font-size:12.5px;padding:5px 0 5px 20px;position:relative;line-height:1.55;font-weight:500}
+  .health-step::before{content:'✓';position:absolute;left:0;color:#7ce68d;font-weight:900}
+  .health-when{font-size:12px;color:var(--text-soft);margin-top:8px;font-weight:500}
+  .health-when b{color:var(--text-dim);font-weight:800}
+  .askesis-card{background:var(--glass);border:1px solid var(--glass-border);border-radius:22px;padding:18px;margin-bottom:12px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .askesis-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px}
+  .askesis-name{font-size:14.5px;font-weight:800}
+  .askesis-days{font-size:12px;color:#7dc7ff;font-weight:800;flex-shrink:0}
+  .progress-bar{height:12px;background:rgba(255,255,255,0.08);border-radius:100px;overflow:hidden}
+  .progress-fill{height:100%;width:0%;background:linear-gradient(90deg,#f5576c,#f093fb,#8b7cff);transition:width .6s;border-radius:100px;box-shadow:0 0 16px rgba(240,147,251,0.5)}
+  .askesis-actions{display:flex;gap:8px;margin-top:14px}
+  .mini-btn{flex:1;padding:11px 12px;border-radius:12px;border:none;background:rgba(79,172,254,0.2);color:#7dc7ff;font-size:12.5px;font-weight:800;cursor:pointer;font-family:inherit}
+  .mini-btn:active{transform:scale(.95)}
+  .mini-btn.danger{background:rgba(245,87,108,0.2);color:#ff8296}
+  .mini-btn.gold{background:rgba(255,209,102,0.2);color:var(--gold)}
+  .mini-btn.green{background:rgba(76,217,100,0.2);color:#7ce68d}
+  .mini-btn.purple{background:rgba(139,124,255,0.24);color:#b3a6ff}
+  .chart{display:flex;align-items:flex-end;gap:6px;height:160px;background:var(--glass);border-radius:22px;padding:20px 16px 14px;border:1px solid var(--glass-border);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;height:100%;justify-content:flex-end}
+  .bar{width:100%;background:linear-gradient(180deg,#4facfe,#8b7cff);border-radius:6px 6px 3px 3px;min-height:3px;transition:height .6s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 0 12px rgba(79,172,254,0.45)}
+  .bar-label{font-size:10px;color:var(--text-soft);font-weight:700}
+  .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+  .cal-day{aspect-ratio:1;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:11.5px;color:var(--text-soft);font-weight:700}
+  .cal-day.has{background:linear-gradient(135deg,rgba(139,124,255,0.55),rgba(79,172,254,0.55));color:#fff;box-shadow:0 0 14px rgba(139,124,255,0.45)}
+  .cal-day.today{border:2px solid #4facfe;box-shadow:0 0 16px rgba(79,172,254,0.6)}
+  .cal-day.empty{visibility:hidden}
+  .setting{display:flex;justify-content:space-between;align-items:center;padding:15px 18px;background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;margin-bottom:8px;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .setting-label{font-size:14px;font-weight:600}
+  .setting-value{font-size:14px;color:var(--text-dim);font-weight:800}
+  .switch{width:52px;height:30px;background:rgba(255,255,255,0.13);border-radius:100px;position:relative;cursor:pointer;transition:.3s;flex-shrink:0;border:1px solid var(--glass-border)}
+  .switch.on{background:linear-gradient(90deg,#4facfe,#8b7cff);box-shadow:0 0 20px rgba(139,124,255,0.55);border-color:transparent}
+  .switch::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.3s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 2px 8px rgba(0,0,0,.35)}
+  .switch.on::after{left:25px}
+  .btn-block{width:100%;padding:16px;border-radius:14px;border:1px solid var(--glass-border);background:var(--glass);color:var(--text);font-size:14.5px;font-weight:800;cursor:pointer;margin-bottom:10px;font-family:inherit;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .btn-block:active{transform:scale(.98)}
+  .btn-block.primary{background:linear-gradient(135deg,#4facfe,#8b7cff);border:none;color:#fff;box-shadow:0 8px 28px rgba(139,124,255,0.45)}
+  .btn-block.danger{color:#ff8296;border-color:rgba(245,87,108,0.32)}
+  .kb-search{width:100%;padding:15px 20px;border-radius:14px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-size:14.5px;margin-bottom:16px;outline:none;font-family:inherit;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);font-weight:500}
+  .kb-search::placeholder{color:var(--text-soft)}
+  .kb-search:focus{border-color:#8b7cff}
+  .ach-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .ach{background:var(--glass);border:1px solid var(--glass-border);border-radius:14px;padding:14px 8px;text-align:center;position:relative;overflow:hidden;backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
+  .ach.unlocked{background:linear-gradient(135deg,rgba(240,147,251,0.24),rgba(139,124,255,0.18));border-color:rgba(240,147,251,0.5);box-shadow:0 0 28px rgba(240,147,251,0.25)}
+  .ach-icon{font-size:34px;margin-bottom:8px;filter:grayscale(1);opacity:.3}
+  .ach.unlocked .ach-icon{filter:none;opacity:1}
+  .ach-name{font-size:10.5px;font-weight:800;margin-bottom:4px;line-height:1.25}
+  .ach-desc{font-size:9px;color:var(--text-soft);line-height:1.3}
+  .modal{position:fixed;inset:0;background:rgba(5,4,15,0.88);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+  .modal.active{display:flex}
+  .modal-content{background:linear-gradient(180deg,var(--bg-3),var(--bg-2));border:1px solid var(--glass-border);border-radius:28px;padding:28px;text-align:center;max-width:440px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+  .breath-circle{width:210px;height:210px;border-radius:50%;background:radial-gradient(circle,#4facfe,#8b7cff);margin:28px auto;display:flex;align-items:center;justify-content:center;font-size:21px;font-weight:900;transition:transform 4s ease-in-out;box-shadow:0 0 70px rgba(79,172,254,0.6);color:#fff}
+  .breath-circle.inhale{transform:scale(1.42)}
+  .breath-circle.exhale{transform:scale(.72)}
+  .btn{background:linear-gradient(135deg,#4facfe,#8b7cff);border:none;color:#fff;padding:14px 30px;border-radius:14px;font-size:14.5px;font-weight:800;cursor:pointer;margin:6px 4px 0;font-family:inherit;box-shadow:0 8px 24px rgba(139,124,255,0.4)}
+  .btn:active{transform:scale(.95)}
+  .btn.ghost{background:rgba(255,255,255,0.08);box-shadow:none}
+  .avatar-picker{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin:18px 0}
+  .av-option{aspect-ratio:1;font-size:28px;border-radius:16px;background:var(--glass);border:2px solid transparent;display:flex;align-items:center;justify-content:center;cursor:pointer}
+  .av-option.selected{border-color:#8b7cff;background:rgba(139,124,255,0.22);box-shadow:0 0 24px rgba(139,124,255,0.55)}
+  .toast{position:fixed;bottom:110px;left:50%;transform:translateX(-50%) translateY(200px);background:linear-gradient(135deg,#4cd964,#4facfe);padding:15px 26px;border-radius:100px;font-weight:800;font-size:14.5px;transition:transform .45s cubic-bezier(0.34,1.56,0.64,1);z-index:300;pointer-events:none;white-space:nowrap;max-width:90vw;box-shadow:0 14px 44px rgba(76,217,100,0.55);color:#fff}
+  .toast.show{transform:translateX(-50%) translateY(0)}
+  .toast.error{background:linear-gradient(135deg,#f5576c,#f093fb)}
+  .ach-popup{position:fixed;top:24px;left:50%;transform:translateX(-50%) translateY(-280px);background:linear-gradient(135deg,#f093fb,#f5576c);padding:20px 26px;border-radius:22px;z-index:400;display:flex;align-items:center;gap:16px;transition:transform .65s cubic-bezier(0.34,1.56,0.64,1);box-shadow:0 20px 60px rgba(240,147,251,0.65);max-width:90vw;color:#fff}
+  .ach-popup.show{transform:translateX(-50%) translateY(0)}
+  .ach-popup-icon{font-size:40px}
+  .ach-popup-text{text-align:left}
+  .ach-popup-title{font-size:10.5px;opacity:.95;letter-spacing:2.5px;text-transform:uppercase;font-weight:800}
+  .ach-popup-name{font-size:17px;font-weight:900;margin-top:4px}
+  .info-text{font-size:13px;color:var(--text-dim);margin:8px 0 16px;line-height:1.65;font-weight:500}
+  .empty-state{text-align:center;padding:50px 24px;color:var(--text-dim);font-size:13.5px}
+  .empty-state-icon{font-size:54px;margin-bottom:16px;opacity:.5}
+  .input-row{display:flex;gap:8px;margin-bottom:10px}
+  .input-row input,.input-row select{padding:12px 14px;border-radius:12px;background:var(--glass);border:1px solid var(--glass-border);color:var(--text);font-size:13.5px;outline:none;font-family:inherit}
+  .input-row input{flex:1;min-width:0}
+  .tier-select{display:flex;gap:4px;margin-top:10px}
+  .tier-sel-btn{flex:1;padding:6px 4px;border-radius:8px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.03);color:var(--text-soft);font-size:10px;font-weight:800;cursor:pointer;font-family:inherit;transition:all .2s}
+  .tier-sel-btn.active{background:linear-gradient(135deg,rgba(240,147,251,0.32),rgba(139,124,255,0.32));color:#d8b5ff;border-color:rgba(240,147,251,0.45)}
+</style>
+</head>
+<body>
+<div id="loading"><div class="spinner"></div><div>Загрузка Пути...</div></div>
+<canvas id="fractalCanvas"></canvas>
+<div id="bgOverlay"></div>
+
+<div class="app" id="appRoot" style="display:none;">
+  <div class="header">
+    <div class="avatar-row">
+      <div class="avatar" id="avatar" onclick="openAvatarPicker()">🧘</div>
+      <div class="level-info">
+        <div class="level-badge" id="levelBadge">Ур. 1 · Новичок</div>
+        <div class="rank-title" id="rankTitle">Начало пути</div>
+      </div>
+    </div>
+    <h1>Путь</h1>
+    <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+    <div class="xp-text" id="xpText">0 / 100 XP</div>
+    <div class="stats-row">
+      <div class="stat"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Стрик</div></div>
+      <div class="stat"><div class="stat-value" id="statToday">0</div><div class="stat-label">Сегодня</div></div>
+      <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Дней</div></div>
+      <div class="stat"><div class="stat-value" id="statRank">🌱</div><div class="stat-label">Ранг</div></div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" data-page="card">🎴</div>
+    <div class="tab" data-page="path">🗺️</div>
+    <div class="tab" data-page="practices">📋</div>
+    <div class="tab" data-page="quests">⚔️</div>
+    <div class="tab" data-page="barriers">🚧</div>
+    <div class="tab" data-page="goals">🎯</div>
+    <div class="tab" data-page="mood">📔</div>
+    <div class="tab" data-page="health">💚</div>
+    <div class="tab" data-page="askesis">🔥</div>
+    <div class="tab" data-page="knowledge">📖</div>
+    <div class="tab" data-page="progress">📊</div>
+    <div class="tab" data-page="awards">🏆</div>
+    <div class="tab" data-page="settings">⚙️</div>
+  </div>
+
+  <div class="page active" id="page-card">
+    <div class="section-title">Карта Судьбы</div>
+    <div class="info-text">Одна карта в день. Испытание, которое сегодня важнее всего.</div>
+    <div id="cardContainer"></div>
+    <div class="section-title">ДНК Привычек</div>
+    <div class="info-text">Каждый квадрат — один день. Смотри, как растёт твой путь.</div>
+    <div class="dna-wrap" id="dnaWrap"></div>
+  </div>
+
+  <div class="page" id="page-path">
+    <div class="section-title">Путь Пробуждения</div>
+    <div class="info-text">7 ступеней от первых шагов до полного осознания.</div>
+    <div id="pathContainer"></div>
+  </div>
+
+  <div class="page" id="page-practices">
+    <div class="section-title">Практики</div>
+    <div class="info-text">5 уровней сложности. Прогресс открывает новые версии.</div>
+    <div id="practicesContainer"></div>
+  </div>
+
+  <div class="page" id="page-quests">
+    <div class="section-title">Квесты дня</div>
+    <div class="info-text" id="phaseText"></div>
+    <div id="questsContainer"></div>
+  </div>
+
+  <div class="page" id="page-barriers">
+    <div class="section-title">Преграды на Пути</div>
+    <div class="info-text">Не враги. То, что мешает расти. Каждая практика ослабляет их.</div>
+    <div id="barriersContainer"></div>
+  </div>
+
+  <div class="page" id="page-goals">
+    <div class="section-title">Мои цели</div>
+    <div class="info-text">Поставь большую цель. Приложение посчитает дни и прогресс.</div>
+    <div id="goalsContainer"></div>
+    <div class="input-row">
+      <input id="goalTitle" placeholder="Цель (например: пробежать 10 км)" maxlength="50">
+    </div>
+    <div class="input-row">
+      <input id="goalDate" type="date">
+      <button class="btn-block primary" style="width:auto;margin:0;padding:12px 20px;" onclick="addGoal()">🎯 Создать</button>
+    </div>
+  </div>
+
+  <div class="page" id="page-mood">
+    <div class="section-title">Дневник настроения</div>
+    <div class="info-text">Отмечай состояние каждый день. Через неделю увидишь закономерности.</div>
+    <div id="moodContainer"></div>
+  </div>
+
+  <div class="page" id="page-health">
+    <div class="section-title">Здоровье и свобода</div>
+    <div class="info-text">Как избавиться от зависимостей, побороть страхи и жить здорово.</div>
+    <input class="kb-search" id="healthSearch" placeholder="🔍 Поиск..." oninput="filterHealth(this.value)">
+    <div id="healthContainer"></div>
+  </div>
+
+  <div class="page" id="page-askesis">
+    <div class="section-title">🔥 Активные аскезы</div>
+    <div id="askesisActive"></div>
+    <div class="section-title">📜 Доступные</div>
+    <div id="askesisAvailable"></div>
+  </div>
+
+  <div class="page" id="page-knowledge">
+    <div class="section-title">📖 База знаний</div>
+    <div class="info-text">Зачем нужна практика, как делать, результаты.</div>
+    <input class="kb-search" id="kbSearch" placeholder="🔍 Поиск..." oninput="filterKnowledge(this.value)">
+    <div id="knowledgeContainer"></div>
+  </div>
+
+  <div class="page" id="page-progress">
+    <div class="section-title">📊 XP за 14 дней</div>
+    <div class="chart" id="chart"></div>
+    <div class="section-title">📅 Календарь</div>
+    <div class="cal" id="calendar"></div>
+    <div class="section-title">🎯 Детали</div>
+    <div class="setting"><span class="setting-label">Всего XP</span><b class="setting-value" id="detailXp">0</b></div>
+    <div class="setting"><span class="setting-label">Макс. стрик</span><b class="setting-value" id="detailStreak">0</b></div>
+    <div class="setting"><span class="setting-label">Практик</span><b class="setting-value" id="detailDone">0</b></div>
+    <div class="setting"><span class="setting-label">Достижений</span><b class="setting-value" id="detailAch">0</b></div>
+    <div class="setting"><span class="setting-label">Преград</span><b class="setting-value" id="detailBarriers">0</b></div>
+    <div class="setting"><span class="setting-label">Целей достигнуто</span><b class="setting-value" id="detailGoals">0</b></div>
+    <div class="setting"><span class="setting-label">Карт выполнено</span><b class="setting-value" id="detailCards">0</b></div>
+  </div>
+
+  <div class="page" id="page-awards">
+    <div class="section-title">🏆 Достижения</div>
+    <div class="ach-grid" id="achGrid"></div>
+  </div>
+
+  <div class="page" id="page-settings">
+    <div class="section-title">🎨 Тема</div>
+    <div id="themePicker" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px;"></div>
+    <div class="section-title">🌀 Фракталы</div>
+    <div id="fractalPicker" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px;"></div>
+    <div class="section-title">⚙️ Основные</div>
+    <div class="setting"><span class="setting-label">🔊 Звуки</span><div class="switch" id="switchSound" onclick="toggleSound()"></div></div>
+    <div class="setting"><span class="setting-label">🔔 Напоминания</span><div class="switch" id="switchNotify" onclick="toggleNotify()"></div></div>
+    <div class="section-title">✏️ Своя практика</div>
+    <div class="input-row">
+      <input id="newName" placeholder="Название" maxlength="30">
+      <select id="newCat">
+        <option value="disc">Дисциплина</option>
+        <option value="breath">Дыхание</option>
+        <option value="body">Тело</option>
+        <option value="mind">Разум</option>
+        <option value="spirit">Дух</option>
+        <option value="health">Здоровье</option>
+      </select>
+    </div>
+    <button class="btn-block primary" onclick="addCustomPractice()">➕ Добавить</button>
+    <div id="customList"></div>
+    <div class="section-title">💾 Данные</div>
+    <button class="btn-block primary" onclick="exportData()">📤 Экспорт</button>
+    <button class="btn-block" onclick="document.getElementById('importFile').click()">📥 Импорт</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn-block danger" onclick="resetAll()">🗑 Сбросить всё</button>
+  </div>
+</div>
+
+<div class="modal" id="breathModal"><div class="modal-content">
+  <h2 id="breathTitle">Дыхание</h2>
+  <div class="breath-circle" id="breathCircle">Приготовься</div>
+  <div id="breathPhase" style="opacity:.78;font-size:14.5px;font-weight:700;">Нажми «Начать»</div>
+  <button class="btn" id="breathBtn" onclick="startBreath()">Начать</button>
+  <button class="btn ghost" onclick="closeBreath()">Закрыть</button>
+</div></div>
+
+<div class="modal" id="avatarModal"><div class="modal-content">
+  <h2>Аватар</h2>
+  <div class="avatar-picker" id="avatarPicker"></div>
+  <button class="btn ghost" onclick="closeModal('avatarModal')">Закрыть</button>
+</div></div>
+
+<div class="modal" id="infoModal"><div class="modal-content" style="text-align:left;">
+  <h2 id="infoTitle" style="margin-bottom:14px;">Практика</h2>
+  <div id="infoBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim);"></div>
+  <button class="btn ghost" style="margin-top:20px;width:100%;" onclick="closeModal('infoModal')">Закрыть</button>
+</div></div>
+
+<div class="toast" id="toast"></div>
+<div class="ach-popup" id="achPopup">
+  <div class="ach-popup-icon" id="achPopupIcon">🏆</div>
+  <div class="ach-popup-text">
+    <div class="ach-popup-title">Достижение открыто</div>
+    <div class="ach-popup-name" id="achPopupName">—</div>
+  </div>
+</div>
+
+<script>
+window.addEventListener('error',function(e){
+  var l=document.getElementById('loading');
+  if(l) l.innerHTML='<div class="err">⚠️ Ошибка:<br>'+(e.message||'Unknown')+'</div>';
+});
+
+/* ============================================================
+   ФРАКТАЛЬНЫЙ ФОН
+============================================================ */
+var canvas=document.getElementById('fractalCanvas');
+var ctx=canvas?canvas.getContext('2d',{alpha:true}):null;
+var W=0,H=0,currentFractalStyle='mixed',time=0,fractalParticles=[];
+
+function resizeCanvas(){if(!canvas)return;W=canvas.width=window.innerWidth;H=canvas.height=window.innerHeight;}
+window.addEventListener('resize',resizeCanvas);
+resizeCanvas();
+
+for(var fi=0;fi<45;fi++){
+  fractalParticles.push({
+    x:Math.random(),y:Math.random(),
+    size:40+Math.random()*130,speed:0.015+Math.random()*0.04,
+    phase:Math.random()*Math.PI*2,hue:Math.random()*360,
+    type:Math.floor(Math.random()*5),alpha:0.25+Math.random()*0.3
+  });
+}
+
+function drawKoch(cx,cy,size,rot,hue,alpha){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  for(var i=0;i<6;i++){
+    ctx.rotate(Math.PI/3);
+    ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(size,0);
+    ctx.lineTo(size*0.66,size*0.35);ctx.lineTo(size*0.33,-size*0.15);ctx.closePath();
+    ctx.strokeStyle='hsla('+hue+',80%,68%,'+alpha+')';ctx.lineWidth=1.6;ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawSierpinski(cx,cy,size,rot,hue,alpha){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  function tri(x,y,s,d){
+    if(d===0){
+      ctx.beginPath();ctx.moveTo(x,y-s);ctx.lineTo(x-s*0.9,y+s*0.7);ctx.lineTo(x+s*0.9,y+s*0.7);ctx.closePath();
+      ctx.strokeStyle='hsla('+hue+',85%,68%,'+alpha+')';ctx.lineWidth=1.3;ctx.stroke();return;
+    }
+    tri(x,y-s*0.5,s*0.5,d-1);tri(x-s*0.5,y+s*0.4,s*0.5,d-1);tri(x+s*0.5,y+s*0.4,s*0.5,d-1);
+  }
+  tri(0,0,size,3);ctx.restore();
+}
+function drawPentagon(cx,cy,size,rot,hue,alpha){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  for(var layer=0;layer<3;layer++){
+    var s=size*(1-layer*0.25);
+    ctx.beginPath();
+    for(var i=0;i<=5;i++){
+      var a=(i/5)*Math.PI*2-Math.PI/2;
+      var x=Math.cos(a)*s,y=Math.sin(a)*s;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle='hsla('+(hue+layer*25)+',80%,70%,'+(alpha*(1-layer*0.22))+')';
+    ctx.lineWidth=1.5;ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawStar(cx,cy,size,rot,hue,alpha){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  for(var layer=0;layer<2;layer++){
+    var s=size*(1-layer*0.4);
+    ctx.beginPath();
+    for(var i=0;i<16;i++){
+      var a=(i/16)*Math.PI*2-Math.PI/2;
+      var r=i%2===0?s:s*0.42;
+      var x=Math.cos(a)*r,y=Math.sin(a)*r;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle='hsla('+(hue+layer*35)+',85%,72%,'+(alpha*(1-layer*0.28))+')';
+    ctx.lineWidth=1.5;ctx.stroke();
+  }
+  ctx.restore();
+}
+function drawHex(cx,cy,size,rot,hue,alpha){
+  ctx.save();ctx.translate(cx,cy);ctx.rotate(rot);
+  for(var layer=0;layer<3;layer++){
+    var s=size*(1-layer*0.3);
+    ctx.beginPath();
+    for(var i=0;i<=6;i++){
+      var a=(i/6)*Math.PI*2;
+      var x=Math.cos(a)*s,y=Math.sin(a)*s;
+      if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle='hsla('+(hue+layer*20)+',80%,70%,'+(alpha*(1-layer*0.22))+')';
+    ctx.lineWidth=1.6;ctx.stroke();
+  }
+  ctx.restore();
+}
+function animateFractals(){
+  if(!ctx)return;
+  time+=0.007;ctx.clearRect(0,0,W,H);
+  if(currentFractalStyle!=='none'){
+    for(var i=0;i<fractalParticles.length;i++){
+      var p=fractalParticles[i];
+      p.phase+=p.speed*0.025;
+      var cx=(p.x+Math.cos(time*0.35+p.phase)*0.09)*W;
+      var cy=(p.y+Math.sin(time*0.28+p.phase*0.9)*0.09)*H;
+      var rot=time*0.5+p.phase;
+      var hue=(p.hue+time*12)%360;
+      var alpha=p.alpha*(0.75+Math.sin(time*1.2+p.phase)*0.25);
+      var fn;
+      if(currentFractalStyle==='mixed')fn=[drawKoch,drawSierpinski,drawPentagon,drawStar,drawHex][p.type];
+      else if(currentFractalStyle==='koch')fn=drawKoch;
+      else if(currentFractalStyle==='sierpinski')fn=drawSierpinski;
+      else if(currentFractalStyle==='pentagon')fn=drawPentagon;
+      else if(currentFractalStyle==='star')fn=drawStar;
+      else if(currentFractalStyle==='hex')fn=drawHex;
+      if(fn)fn(cx,cy,p.size,rot,hue,alpha);
+    }
+  }
+  requestAnimationFrame(animateFractals);
+}
+
+/* ============================================================
+   КОНСТАНТЫ
+============================================================ */
+var STORAGE='put_v8';
+function dateKey(d){var y=d.getFullYear(),m=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return y+'-'+m+'-'+dd;}
+function todayStr(){return new Date().toDateString();}
+
+var DEFAULT_STATE={
+  xp:0,streak:0,maxStreak:0,lastDate:null,todayDone:[],
+  history:{},totalDays:0,totalDone:0,achievements:[],
+  avatar:'🧘',theme:'dark',fractalStyle:'mixed',sound:true,notify:false,
+  practiceTiers:{},completionCounter:{},customPractices:[],askesis:[],
+  dailyQuests:{date:null,list:[],completed:[]},
+  barriersCleared:0,barrierProgress:{},currentPathStep:0,
+  dailyCard:null,cardsCompleted:0,
+  goals:[],goalsCompleted:0,
+  moods:{},moodNotes:{},
+  notes:''
+};
+
+var LEVELS=[
+  {name:'Новичок',xp:0,mult:1.0,rank:'🌱'},
+  {name:'Искатель',xp:100,mult:1.1,rank:'🔍'},
+  {name:'Практик',xp:250,mult:1.25,rank:'⚙️'},
+  {name:'Воин духа',xp:500,mult:1.5,rank:'⚔️'},
+  {name:'Мудрец',xp:900,mult:1.75,rank:'🦉'},
+  {name:'Мастер',xp:1500,mult:2.0,rank:'🎖️'},
+  {name:'Просветлённый',xp:2500,mult:2.5,rank:'✨'},
+  {name:'Легенда',xp:4000,mult:3.0,rank:'👑'}
+];
+var RANK_TITLES=['Начало пути','В поиске','Дисциплина дня','Путь воина','Спокойствие ума','Мастер тела','Свет внутри','Тот, кто шёл до конца'];
+
+/* КАРТЫ СУДЬБЫ */
+var DESTINY_CARDS=[
+  {id:'c_breath',icon:'🌬️',title:'Дыхание ветра',desc:'Сегодня начни день с 5 минут дыхания 4-7-8 до телефона.',reward:60,check:function(s){return s.todayDone.indexOf('breath478')>=0;}},
+  {id:'c_cold',icon:'❄️',title:'Ледяное пробуждение',desc:'Холодный душ минимум 1 минуту сегодня.',reward:60,check:function(s){return s.todayDone.indexOf('cold')>=0;}},
+  {id:'c_silence',icon:'🤫',title:'Час тишины',desc:'Найди час без телефона и музыки.',reward:70,check:function(s){return s.todayDone.indexOf('silence')>=0;}},
+  {id:'c_run',icon:'🏃',title:'Бег ветра',desc:'Пробежка минимум 3 км или 30 минут.',reward:80,check:function(s){return s.todayDone.indexOf('run')>=0;}},
+  {id:'c_med',icon:'🧘',title:'Внутренний покой',desc:'Медитация 15+ минут без перерыва.',reward:60,check:function(s){return s.todayDone.indexOf('meditate')>=0;}},
+  {id:'c_write',icon:'✍️',title:'Слово правды',desc:'Полная страница дневника — что чувствуешь на самом деле.',reward:55,check:function(s){return s.todayDone.indexOf('journal')>=0;}},
+  {id:'c_grat',icon:'🙏',title:'Благодарность',desc:'10 вещей, за которые благодарен сегодня.',reward:50,check:function(s){return s.todayDone.indexOf('grat')>=0;}},
+  {id:'c_water',icon:'💧',title:'Живая вода',desc:'2 литра воды сегодня.',reward:45,check:function(s){return s.todayDone.indexOf('water')>=0;}},
+  {id:'c_sun',icon:'☀️',title:'Свет солнца',desc:'30 минут на улице при свете.',reward:50,check:function(s){return s.todayDone.indexOf('sun')>=0;}},
+  {id:'c_deep',icon:'🔥',title:'Глубокая работа',desc:'2 часа монозадачи без отвлечений.',reward:80,check:function(s){return s.todayDone.indexOf('deepwork')>=0;}},
+  {id:'c_5',icon:'⭐',title:'Пять побед',desc:'Выполни 5 практик за день.',reward:70,check:function(s){return s.todayDone.length>=5;}},
+  {id:'c_early',icon:'🌅',title:'Ранний восход',desc:'Подъём до 6:00.',reward:60,check:function(s){return s.todayDone.indexOf('wake')>=0;}},
+  {id:'c_read',icon:'📖',title:'Мудрость страниц',desc:'30+ страниц книги.',reward:50,check:function(s){return s.todayDone.indexOf('read')>=0;}},
+  {id:'c_stretch',icon:'🧘‍♂️',title:'Гибкое тело',desc:'20+ минут растяжки.',reward:50,check:function(s){return s.todayDone.indexOf('stretch')>=0;}},
+  {id:'c_push',icon:'🤸',title:'Сила рук',desc:'3 подхода отжиманий.',reward:50,check:function(s){return s.todayDone.indexOf('pushups')>=0;}},
+  {id:'c_nophone',icon:'📵',title:'Цифровая тишина',desc:'1 час утром без телефона.',reward:55,check:function(s){return s.todayDone.indexOf('nophone')>=0;}},
+  {id:'c_observer',icon:'👁️',title:'Свидетель',desc:'30 минут наблюдения за умом.',reward:80,check:function(s){return s.todayDone.indexOf('observer')>=0;}},
+  {id:'c_solitude',icon:'🏔️',title:'Уединение',desc:'3 часа в одиночестве без соцсетей.',reward:90,check:function(s){return s.todayDone.indexOf('solitude')>=0;}},
+  {id:'c_fast',icon:'⏳',title:'Окно ясности',desc:'16 часов без еды (интервальное голодание).',reward:80,check:function(s){return s.todayDone.indexOf('fast')>=0;}},
+  {id:'c_push2',icon:'💪',title:'Три рубежа',desc:'3 практики тела сегодня.',reward:60,check:function(s){return todayCatCount(s,'body')>=3;}},
+  {id:'c_mind2',icon:'🧠',title:'Три разума',desc:'3 практики разума сегодня.',reward:60,check:function(s){return todayCatCount(s,'mind')>=3;}},
+  {id:'c_breath2',icon:'🫁',title:'Три дыхания',desc:'3 дыхательные практики.',reward:60,check:function(s){return todayCatCount(s,'breath')>=3;}},
+  {id:'c_health2',icon:'💚',title:'Три здоровья',desc:'3 практики здоровья.',reward:65,check:function(s){return todayCatCount(s,'health')>=3;}},
+  {id:'c_spirit2',icon:'✨',title:'Голос духа',desc:'2 духовные практики.',reward:75,check:function(s){return todayCatCount(s,'spirit')>=2;}},
+  {id:'c_perfect',icon:'💯',title:'Идеальный день',desc:'7+ практик за сегодня.',reward:120,check:function(s){return s.todayDone.length>=7;}},
+  {id:'c_cold2',icon:'🥶',title:'Встреча с холодом',desc:'5 минут холодного душа.',reward:80,check:function(s){return s.todayDone.indexOf('cold')>=0;}},
+  {id:'c_deep6',icon:'🌌',title:'Глубина',desc:'Медитация 25+ минут.',reward:90,check:function(s){return s.todayDone.indexOf('meditate')>=0;}},
+  {id:'c_plank',icon:'🧱',title:'Камень',desc:'Планка 3×60 сек.',reward:55,check:function(s){return s.todayDone.indexOf('plank')>=0;}},
+  {id:'c_learn',icon:'🎓',title:'Ученик',desc:'1+ час обучения.',reward:60,check:function(s){return s.todayDone.indexOf('learn')>=0;}},
+  {id:'c_metta',icon:'💗',title:'Сердце открыто',desc:'Мета-медитация 10+ минут.',reward:70,check:function(s){return s.todayDone.indexOf('metta')>=0;}}
+];
+
+/* ПРЕГРАДЫ */
+var BARRIERS=[
+  {id:'fear',name:'Страхи',icon:'😰',tag:'Первый рубеж',desc:'Страх отказа, неудачи, осуждения. Не даёт выйти из зоны комфорта.',hint:'Каждый раз, когда делаешь что-то вопреки страху — он слабее. Начни с малого.',requiredXp:150},
+  {id:'complexes',name:'Комплексы',icon:'🪞',tag:'Второй рубеж',desc:'Неуверенность, сравнение, «я недостаточно хорош».',hint:'Ты — не свои мысли о себе. Замечай критику внутри и отвечай с добротой.',requiredXp:400},
+  {id:'addictions',name:'Зависимости',icon:'⛓️',tag:'Третий рубеж',desc:'Телефон, сахар, кофеин, порно, соцсети. Крадут дофамин и время.',hint:'Не борись — заменяй. Каждое осознанное «нет» укрепляет префронтальную кору.',requiredXp:800},
+  {id:'laziness',name:'Лень',icon:'😴',tag:'Четвёртый рубеж',desc:'Тянет назад, шепчет «потом». Побеждается действием вопреки.',hint:'Правило 2 минут: начни с самого маленького. Тело разогреется — ум последует.',requiredXp:1400},
+  {id:'chaos',name:'Хаос',icon:'🌪️',tag:'Пятый рубеж',desc:'Разбросанность, нет фокуса, всё срочно.',hint:'Медитация, дыхание, дневник. Возвращайся к одной задаче.',requiredXp:2200},
+  {id:'doubt',name:'Сомнения',icon:'🌫️',tag:'Шестой рубеж',desc:'«А правильно ли я иду? А получится ли?».',hint:'Сомнение — часть пути. Уходит не от размышлений, а от действия.',requiredXp:3200},
+  {id:'ego',name:'Эго',icon:'👁️',tag:'Финальный рубеж',desc:'«Я лучше», «я знаю», «я особенный».',hint:'Эго — последний страж. Растворить можно через любовь и наблюдение за собой.',requiredXp:5000}
+];
+
+/* ПРАКТИКИ — с добавлениями */
+var BASE_PRACTICES=[
+  {id:'wake',cat:'disc',icon:'🌅',name:'Ранний подъём',tiers:[
+    {name:'Встать до 8:00',xp:10,lvl:0},{name:'Встать до 7:00',xp:20,lvl:0},
+    {name:'Встать до 6:00',xp:35,lvl:1},{name:'Встать до 5:00',xp:55,lvl:3},
+    {name:'Встать до 4:30 + зарядка',xp:80,lvl:5}]},
+  {id:'cold',cat:'disc',icon:'🚿',name:'Холодный душ',tiers:[
+    {name:'30 секунд',xp:10,lvl:0},{name:'1 минута',xp:15,lvl:0},
+    {name:'2 минуты',xp:25,lvl:1},{name:'5 минут + дыхание',xp:40,lvl:3},
+    {name:'10 минут + медитация',xp:70,lvl:5}]},
+  {id:'nophone',cat:'disc',icon:'📵',name:'Цифровая тишина',tiers:[
+    {name:'30 минут утром',xp:10,lvl:0},{name:'1 час утром',xp:20,lvl:1},
+    {name:'2 часа днём',xp:30,lvl:2},{name:'Полдня без соцсетей',xp:50,lvl:4},
+    {name:'Весь день без интернета',xp:90,lvl:6}]},
+  {id:'fast',cat:'disc',icon:'⏳',name:'Голодание',tiers:[
+    {name:'12 часов',xp:15,lvl:1},{name:'14 часов',xp:20,lvl:1},
+    {name:'16 часов',xp:30,lvl:2},{name:'18 часов',xp:45,lvl:3},
+    {name:'24 часа',xp:80,lvl:5}]},
+  {id:'silence',cat:'disc',icon:'🤫',name:'Час тишины',tiers:[
+    {name:'15 минут',xp:10,lvl:2},{name:'30 минут',xp:18,lvl:3},
+    {name:'1 час',xp:30,lvl:4},{name:'2 часа',xp:50,lvl:5},
+    {name:'Полдня',xp:100,lvl:6}]},
+  {id:'mono',cat:'disc',icon:'🎯',name:'Монозадача',tiers:[
+    {name:'30 минут',xp:12,lvl:2},{name:'1 час',xp:22,lvl:3},
+    {name:'2 часа',xp:40,lvl:4},{name:'4 часа',xp:75,lvl:5},
+    {name:'Весь день',xp:150,lvl:6}]},
+  {id:'dopamine_fast',cat:'disc',icon:'🧠',name:'Дофаминовое голодание',tiers:[
+    {name:'3 часа без экранов',xp:20,lvl:2},{name:'6 часов',xp:35,lvl:3},
+    {name:'Весь день',xp:70,lvl:4},{name:'24 часа',xp:120,lvl:5},
+    {name:'48 часов',xp:220,lvl:7}]},
+  {id:'breath478',cat:'breath',icon:'💨',name:'Дыхание 4-7-8',tiers:[
+    {name:'4 цикла',xp:10,lvl:0,breath:'478'},{name:'8 циклов',xp:18,lvl:1,breath:'478'},
+    {name:'12 циклов',xp:30,lvl:2,breath:'478'},{name:'20 циклов',xp:50,lvl:4,breath:'478'},
+    {name:'30 циклов',xp:80,lvl:6,breath:'478'}]},
+  {id:'box',cat:'breath',icon:'🟦',name:'Квадратное дыхание',tiers:[
+    {name:'1 минута',xp:10,lvl:1,breath:'box'},{name:'3 минуты',xp:20,lvl:2,breath:'box'},
+    {name:'5 минут',xp:32,lvl:3,breath:'box'},{name:'10 минут',xp:55,lvl:5,breath:'box'},
+    {name:'20 минут',xp:100,lvl:6,breath:'box'}]},
+  {id:'wim',cat:'breath',icon:'❄️',name:'Вима Хофа',tiers:[
+    {name:'1 раунд',xp:15,lvl:2,breath:'wim'},{name:'2 раунда',xp:28,lvl:3,breath:'wim'},
+    {name:'3 раунда',xp:45,lvl:4,breath:'wim'},{name:'4 раунда + 2 мин',xp:85,lvl:6,breath:'wim'},
+    {name:'6 раундов + 3 мин',xp:150,lvl:7,breath:'wim'}]},
+  {id:'alt',cat:'breath',icon:'🌊',name:'Нади Шодхана',tiers:[
+    {name:'3 минуты',xp:15,lvl:2,breath:'alt'},{name:'5 минут',xp:25,lvl:3,breath:'alt'},
+    {name:'10 минут',xp:45,lvl:4,breath:'alt'},{name:'15 минут',xp:70,lvl:5,breath:'alt'},
+    {name:'20 минут',xp:120,lvl:7,breath:'alt'}]},
+  {id:'deep',cat:'breath',icon:'🌌',name:'Осознанное дыхание',tiers:[
+    {name:'5 минут',xp:15,lvl:3},{name:'10 минут',xp:30,lvl:4},
+    {name:'20 минут',xp:55,lvl:5},{name:'30 минут',xp:80,lvl:6},
+    {name:'60 минут',xp:150,lvl:7}]},
+  {id:'holo',cat:'breath',icon:'🫁',name:'Холотропное дыхание',tiers:[
+    {name:'20 минут',xp:30,lvl:5},{name:'40 минут',xp:55,lvl:5},
+    {name:'60 минут',xp:90,lvl:6},{name:'90 минут',xp:150,lvl:7},
+    {name:'2 часа',xp:250,lvl:7}]},
+  {id:'pushups',cat:'body',icon:'🤸',name:'Отжимания',tiers:[
+    {name:'3×10',xp:10,lvl:0},{name:'3×20',xp:20,lvl:1},
+    {name:'3×30',xp:35,lvl:2},{name:'4×40',xp:55,lvl:4},
+    {name:'5×50 + алмазные',xp:100,lvl:6}]},
+  {id:'squats',cat:'body',icon:'🏋️',name:'Приседания',tiers:[
+    {name:'50 раз',xp:10,lvl:0},{name:'100 раз',xp:20,lvl:1},
+    {name:'150 раз',xp:35,lvl:2},{name:'250 раз',xp:55,lvl:4},
+    {name:'400 раз',xp:110,lvl:6}]},
+  {id:'walk',cat:'body',icon:'🚶',name:'Прогулка',tiers:[
+    {name:'5000 шагов',xp:10,lvl:0},{name:'8000 шагов',xp:20,lvl:0},
+    {name:'12000 шагов',xp:35,lvl:2},{name:'15000 шагов',xp:50,lvl:4},
+    {name:'20000+ шагов',xp:85,lvl:6}]},
+  {id:'plank',cat:'body',icon:'🧱',name:'Планка',tiers:[
+    {name:'3×30 сек',xp:12,lvl:1},{name:'3×60 сек',xp:25,lvl:2},
+    {name:'3×90 сек',xp:42,lvl:3},{name:'3×2 мин',xp:75,lvl:5},
+    {name:'5×3 мин',xp:140,lvl:7}]},
+  {id:'stretch',cat:'body',icon:'🧘‍♂️',name:'Растяжка',tiers:[
+    {name:'10 минут',xp:10,lvl:1},{name:'20 минут',xp:20,lvl:2},
+    {name:'30 минут йога',xp:35,lvl:3},{name:'45 минут',xp:60,lvl:5},
+    {name:'60 минут практики',xp:100,lvl:6}]},
+  {id:'run',cat:'body',icon:'🏃',name:'Пробежка',tiers:[
+    {name:'2 км',xp:20,lvl:2},{name:'5 км',xp:35,lvl:3},
+    {name:'8 км',xp:55,lvl:4},{name:'10 км',xp:80,lvl:5},
+    {name:'Полумарафон',xp:200,lvl:7}]},
+  {id:'hiit',cat:'body',icon:'⚡',name:'HIIT',tiers:[
+    {name:'10 минут',xp:20,lvl:3},{name:'15 минут',xp:30,lvl:3},
+    {name:'20 минут',xp:42,lvl:4},{name:'30 минут',xp:65,lvl:5},
+    {name:'45 минут + силовая',xp:110,lvl:7}]},
+  {id:'iron',cat:'body',icon:'🏋️‍♂️',name:'Силовая тренировка',tiers:[
+    {name:'Базовая',xp:25,lvl:4},{name:'Средняя',xp:45,lvl:5},
+    {name:'Интенсив',xp:75,lvl:6},{name:'Тяжёлая',xp:120,lvl:7},
+    {name:'Соревновательная',xp:200,lvl:7}]},
+  {id:'meditate',cat:'mind',icon:'🧘',name:'Медитация',tiers:[
+    {name:'5 минут',xp:10,lvl:0},{name:'10 минут',xp:20,lvl:1},
+    {name:'15 минут',xp:30,lvl:2},{name:'25 минут',xp:50,lvl:3},
+    {name:'45 минут',xp:90,lvl:5}]},
+  {id:'read',cat:'mind',icon:'📖',name:'Чтение',tiers:[
+    {name:'10 страниц',xp:10,lvl:0},{name:'20 страниц',xp:18,lvl:0},
+    {name:'30 страниц',xp:28,lvl:1},{name:'50 страниц',xp:45,lvl:3},
+    {name:'100 страниц',xp:85,lvl:5}]},
+  {id:'journal',cat:'mind',icon:'✍️',name:'Дневник',tiers:[
+    {name:'3 строки',xp:10,lvl:0},{name:'Полная страница',xp:20,lvl:1},
+    {name:'Разбор дня',xp:30,lvl:2},{name:'Глубокий анализ',xp:50,lvl:4},
+    {name:'Час письма',xp:90,lvl:6}]},
+  {id:'grat',cat:'mind',icon:'🙏',name:'Благодарность',tiers:[
+    {name:'3 вещи',xp:10,lvl:1},{name:'5 вещей',xp:15,lvl:2},
+    {name:'10 вещей',xp:28,lvl:3},{name:'Письмо благодарности',xp:50,lvl:4},
+    {name:'Мета-медитация 20 мин',xp:85,lvl:6}]},
+  {id:'learn',cat:'mind',icon:'🎓',name:'Обучение',tiers:[
+    {name:'15 минут',xp:15,lvl:2},{name:'30 минут',xp:28,lvl:2},
+    {name:'1 час',xp:42,lvl:3},{name:'2 часа + практика',xp:75,lvl:5},
+    {name:'4 часа',xp:140,lvl:7}]},
+  {id:'deepwork',cat:'mind',icon:'🔥',name:'Глубокая работа',tiers:[
+    {name:'1 час',xp:25,lvl:3},{name:'2 часа',xp:45,lvl:4},
+    {name:'3 часа',xp:70,lvl:5},{name:'4 часа',xp:110,lvl:6},
+    {name:'6 часов',xp:200,lvl:7}]},
+  {id:'shadow',cat:'mind',icon:'🌑',name:'Работа с тенью',tiers:[
+    {name:'15 минут',xp:20,lvl:4},{name:'30 минут',xp:35,lvl:5},
+    {name:'1 час',xp:60,lvl:6},{name:'2 часа',xp:110,lvl:7},
+    {name:'Целый день',xp:220,lvl:7}]},
+  {id:'observer',cat:'spirit',icon:'👁️',name:'Я — Наблюдатель',tiers:[
+    {name:'Заметить 3 мысли',xp:15,lvl:3},{name:'Наблюдать 10 минут',xp:28,lvl:4},
+    {name:'30 минут свидетельствования',xp:50,lvl:5},{name:'Замечать весь день',xp:90,lvl:6},
+    {name:'Постоянное осознание',xp:180,lvl:7}]},
+  {id:'metta',cat:'spirit',icon:'✨',name:'Мета-медитация',tiers:[
+    {name:'5 минут',xp:15,lvl:3},{name:'10 минут',xp:30,lvl:4},
+    {name:'20 минут',xp:55,lvl:5},{name:'40 минут',xp:110,lvl:6},
+    {name:'60 минут',xp:200,lvl:7}]},
+  {id:'solitude',cat:'spirit',icon:'🏔️',name:'Уединение',tiers:[
+    {name:'1 час без людей',xp:20,lvl:3},{name:'3 часа',xp:40,lvl:4},
+    {name:'Полдня',xp:75,lvl:5},{name:'Весь день',xp:150,lvl:6},
+    {name:'Уик-энд в тишине',xp:300,lvl:7}]},
+  {id:'whoami',cat:'spirit',icon:'🕉️',name:'Кто я?',tiers:[
+    {name:'Вопрос 10 раз',xp:20,lvl:4},{name:'30 минут самоисследования',xp:45,lvl:5},
+    {name:'1 час',xp:80,lvl:6},{name:'3 часа',xp:160,lvl:7},
+    {name:'День самоисследования',xp:350,lvl:7}]},
+  {id:'cosmos',cat:'spirit',icon:'🌟',name:'Единство',tiers:[
+    {name:'Наблюдать природу 15 мин',xp:20,lvl:4},{name:'Раствориться в небе',xp:40,lvl:5},
+    {name:'Медитация на единство',xp:70,lvl:6},{name:'Созерцание 1 час',xp:130,lvl:7},
+    {name:'Глубокое переживание',xp:250,lvl:7}]},
+  {id:'water',cat:'health',icon:'💧',name:'Вода',tiers:[
+    {name:'1 литр',xp:10,lvl:0},{name:'1.5 литра',xp:18,lvl:1},
+    {name:'2 литра',xp:28,lvl:2},{name:'2.5 литра',xp:45,lvl:3},
+    {name:'3 литра',xp:70,lvl:5}]},
+  {id:'sleep',cat:'health',icon:'😴',name:'Здоровый сон',tiers:[
+    {name:'7 часов',xp:15,lvl:0},{name:'7.5 часов',xp:22,lvl:1},
+    {name:'8 часов без телефона за час',xp:35,lvl:2},{name:'8.5 часов + ритуал',xp:55,lvl:4},
+    {name:'9 часов идеально',xp:90,lvl:6}]},
+  {id:'sun',cat:'health',icon:'☀️',name:'Солнце',tiers:[
+    {name:'10 минут утром',xp:10,lvl:0},{name:'20 минут',xp:18,lvl:1},
+    {name:'30 минут',xp:28,lvl:2},{name:'Час на улице',xp:50,lvl:4},
+    {name:'Весь день на природе',xp:120,lvl:6}]},
+  {id:'cleanfood',cat:'health',icon:'🥗',name:'Чистое питание',tiers:[
+    {name:'Без сладкого 1 день',xp:15,lvl:0},{name:'Без сахара 2 дня',xp:28,lvl:1},
+    {name:'Без обработанной еды 3 дня',xp:45,lvl:2},{name:'Неделя чистого питания',xp:120,lvl:5},
+    {name:'30 дней чистого питания',xp:400,lvl:7}]},
+  {id:'noscreen',cat:'health',icon:'📴',name:'Цифровой детокс',tiers:[
+    {name:'1 час без телефона',xp:10,lvl:0},{name:'3 часа',xp:20,lvl:1},
+    {name:'Полдня',xp:40,lvl:2},{name:'Весь день',xp:80,lvl:4},
+    {name:'48 часов',xp:180,lvl:7}]},
+  {id:'sauna',cat:'health',icon:'🔥',name:'Сауна / баня',tiers:[
+    {name:'10 минут',xp:15,lvl:2},{name:'15 минут',xp:25,lvl:3},
+    {name:'20 минут + контраст',xp:40,lvl:4},{name:'30 минут',xp:65,lvl:5},
+    {name:'2 часа ритуал',xp:120,lvl:7}]}
+];
+
+/* ДОСТИЖЕНИЯ */
+var ACHIEVEMENTS=[
+  {id:'first',icon:'🌱',name:'Первый шаг',desc:'1 практика',check:function(s){return s.totalDone>=1;}},
+  {id:'streak3',icon:'🔥',name:'Три дня',desc:'Стрик 3',check:function(s){return s.maxStreak>=3;}},
+  {id:'streak7',icon:'⚡',name:'Неделя силы',desc:'Стрик 7',check:function(s){return s.maxStreak>=7;}},
+  {id:'streak21',icon:'💫',name:'Привычка',desc:'Стрик 21',check:function(s){return s.maxStreak>=21;}},
+  {id:'streak30',icon:'💎',name:'Железная воля',desc:'Стрик 30',check:function(s){return s.maxStreak>=30;}},
+  {id:'streak100',icon:'👑',name:'Легенда',desc:'Стрик 100',check:function(s){return s.maxStreak>=100;}},
+  {id:'xp500',icon:'⭐',name:'500 XP',desc:'500',check:function(s){return s.xp>=500;}},
+  {id:'xp1500',icon:'🌟',name:'1500 XP',desc:'1500',check:function(s){return s.xp>=1500;}},
+  {id:'xp4000',icon:'✨',name:'4000 XP',desc:'4000',check:function(s){return s.xp>=4000;}},
+  {id:'xp10000',icon:'💫',name:'10000 XP',desc:'10000',check:function(s){return s.xp>=10000;}},
+  {id:'lvl4',icon:'🏅',name:'Воин духа',desc:'Ур 4',check:function(s){return getLevel(s.xp)>=3;}},
+  {id:'lvl6',icon:'🏆',name:'Мастер',desc:'Ур 6',check:function(s){return getLevel(s.xp)>=5;}},
+  {id:'lvl8',icon:'👑',name:'Легенда',desc:'Макс',check:function(s){return getLevel(s.xp)>=7;}},
+  {id:'done10',icon:'💪',name:'10 практик',desc:'10',check:function(s){return s.totalDone>=10;}},
+  {id:'done100',icon:'🚀',name:'100 практик',desc:'100',check:function(s){return s.totalDone>=100;}},
+  {id:'done500',icon:'🛸',name:'500 практик',desc:'500',check:function(s){return s.totalDone>=500;}},
+  {id:'ask3',icon:'⛰',name:'Аскеза 3 дня',desc:'Пройдена',check:function(s){return s.askesis.some(function(a){return a.completed&&a.targetDays===3;});}},
+  {id:'ask7',icon:'🗻',name:'Аскеза 7 дней',desc:'Пройдена',check:function(s){return s.askesis.some(function(a){return a.completed&&a.targetDays===7;});}},
+  {id:'ask30',icon:'🏔',name:'Аскеза 30 дней',desc:'Пройдена',check:function(s){return s.askesis.some(function(a){return a.completed&&a.targetDays===30;});}},
+  {id:'breather',icon:'🌬',name:'Дыши глубже',desc:'20 дыхательных',check:function(s){return countCat(s,'breath')>=20;}},
+  {id:'ironman',icon:'🦾',name:'Атлет',desc:'30 тренировок',check:function(s){return countCat(s,'body')>=30;}},
+  {id:'thinker',icon:'🧠',name:'Мыслитель',desc:'30 разума',check:function(s){return countCat(s,'mind')>=30;}},
+  {id:'monk',icon:'🕉',name:'Монах',desc:'50 дисциплины',check:function(s){return countCat(s,'disc')>=50;}},
+  {id:'healthy',icon:'💚',name:'Здоровяк',desc:'20 здоровья',check:function(s){return countCat(s,'health')>=20;}},
+  {id:'enlightened',icon:'✨',name:'Пробуждённый',desc:'20 духовных',check:function(s){return countCat(s,'spirit')>=20;}},
+  {id:'barrier1',icon:'🚧',name:'Первый прорыв',desc:'1 преграда',check:function(s){return (s.barriersCleared||0)>=1;}},
+  {id:'barrier3',icon:'🧗',name:'Преодоление',desc:'3 преграды',check:function(s){return (s.barriersCleared||0)>=3;}},
+  {id:'barrier7',icon:'🏆',name:'Свобода',desc:'Все 7 преград',check:function(s){return (s.barriersCleared||0)>=7;}},
+  {id:'path3',icon:'🔥',name:'Ковка',desc:'Ступень 3',check:function(s){return (s.currentPathStep||0)>=3;}},
+  {id:'path5',icon:'👁️',name:'Свидетель',desc:'Ступень 5',check:function(s){return (s.currentPathStep||0)>=5;}},
+  {id:'path7',icon:'🌟',name:'Сотворчество',desc:'Ступень 7',check:function(s){return (s.currentPathStep||0)>=7;}},
+  {id:'card1',icon:'🎴',name:'Судьба',desc:'Первая карта',check:function(s){return (s.cardsCompleted||0)>=1;}},
+  {id:'card10',icon:'🃏',name:'Исполнитель судьбы',desc:'10 карт',check:function(s){return (s.cardsCompleted||0)>=10;}},
+  {id:'goal1',icon:'🎯',name:'Целеустремлённый',desc:'1 цель',check:function(s){return (s.goalsCompleted||0)>=1;}},
+  {id:'goal3',icon:'🏹',name:'Достигатор',desc:'3 цели',check:function(s){return (s.goalsCompleted||0)>=3;}},
+  {id:'mood7',icon:'📔',name:'Дневник души',desc:'7 отметок',check:function(s){return Object.keys(s.moods||{}).length>=7;}},
+  {id:'mood30',icon:'📖',name:'Летописец',desc:'30 отметок',check:function(s){return Object.keys(s.moods||{}).length>=30;}}
+];
+
+/* АСКЕЗЫ */
+var ASKESIS=[
+  {id:'ask_water',name:'💧 Только вода',targetDays:3,xp:50},
+  {id:'ask_nosugar',name:'🍬 Без сахара',targetDays:7,xp:120},
+  {id:'ask_nophone',name:'📵 Без соцсетей',targetDays:7,xp:130},
+  {id:'ask_cold',name:'🥶 Холодный душ',targetDays:14,xp:250},
+  {id:'ask_med14',name:'🧘 Медитация 14 дней',targetDays:14,xp:250},
+  {id:'ask_silence',name:'🤫 Тишина 21 день',targetDays:21,xp:400},
+  {id:'ask_wake5',name:'🌅 Подъём в 5:00 · 30',targetDays:30,xp:700},
+  {id:'ask_med30',name:'🕉 Медитация 30 дней',targetDays:30,xp:700},
+  {id:'ask_monk',name:'⛩ Монашеский режим · 90',targetDays:90,xp:2500}
+];
+
+/* КВЕСТЫ */
+var QUEST_POOL=[
+  {id:'q_breath',icon:'🌬️',name:'Мастер дыхания',desc:'3 дыхательные',reward:40,check:function(s){return todayCatCount(s,'breath')>=3;}},
+  {id:'q_body',icon:'💪',name:'Атлет дня',desc:'3 телесные',reward:40,check:function(s){return todayCatCount(s,'body')>=3;}},
+  {id:'q_mind',icon:'🧠',name:'Мыслитель',desc:'3 разума',reward:40,check:function(s){return todayCatCount(s,'mind')>=3;}},
+  {id:'q_disc',icon:'⚔️',name:'Стойкий воин',desc:'3 дисциплины',reward:40,check:function(s){return todayCatCount(s,'disc')>=3;}},
+  {id:'q_health',icon:'💚',name:'Здоровяк',desc:'3 здоровья',reward:45,check:function(s){return todayCatCount(s,'health')>=3;}},
+  {id:'q_spirit',icon:'✨',name:'Духовный поиск',desc:'2 духовные',reward:55,check:function(s){return todayCatCount(s,'spirit')>=2;}},
+  {id:'q_early',icon:'🌅',name:'Ранняя птица',desc:'Ранний подъём',reward:30,check:function(s){return s.todayDone.indexOf('wake')>=0;}},
+  {id:'q_5',icon:'⭐',name:'Пять побед',desc:'5 практик',reward:50,check:function(s){return s.todayDone.length>=5;}},
+  {id:'q_med',icon:'🧘',name:'Тишина',desc:'Медитация',reward:30,check:function(s){return s.todayDone.indexOf('meditate')>=0;}},
+  {id:'q_read',icon:'📖',name:'Читатель',desc:'Чтение',reward:25,check:function(s){return s.todayDone.indexOf('read')>=0;}},
+  {id:'q_journal',icon:'✍️',name:'Рефлексия',desc:'Дневник',reward:25,check:function(s){return s.todayDone.indexOf('journal')>=0;}},
+  {id:'q_cold',icon:'🚿',name:'Холодный разум',desc:'Холодный душ',reward:30,check:function(s){return s.todayDone.indexOf('cold')>=0;}},
+  {id:'q_7',icon:'🏆',name:'Семь дел',desc:'7 практик',reward:80,check:function(s){return s.todayDone.length>=7;}},
+  {id:'q_water',icon:'💧',name:'Вода',desc:'Норма воды',reward:20,check:function(s){return s.todayDone.indexOf('water')>=0;}},
+  {id:'q_deepwork',icon:'🔥',name:'Монах работы',desc:'2ч глубокой работы',reward:70,check:function(s){return s.todayDone.indexOf('deepwork')>=0;}},
+  {id:'q_solitude',icon:'🏔️',name:'Отшельник',desc:'3 часа уединения',reward:75,check:function(s){return s.todayDone.indexOf('solitude')>=0;}}
+];
+
+function todayCatCount(s,cat){
+  var ids=[];
+  for(var i=0;i<BASE_PRACTICES.length;i++){if(BASE_PRACTICES[i].cat===cat)ids.push(BASE_PRACTICES[i].id);}
+  var c=0;
+  for(var j=0;j<s.todayDone.length;j++){if(ids.indexOf(s.todayDone[j])>=0)c++;}
+  return c;
+}
+
+/* ПУТЬ */
+var AWAKENING_PATH=[
+  {n:1,icon:'🌱',title:'Пробуждение',subtitle:'Первые шаги',desc:'Ты замечаешь, что жил на автопилоте.',
+    reqs:[{type:'totalDone',value:5,label:'5 практик'},{type:'streak',value:3,label:'Стрик 3'}]},
+  {n:2,icon:'💧',title:'Очищение',subtitle:'Убираем шум',desc:'Убираешь лишнее: инфошум, сахар, привычки.',
+    reqs:[{type:'totalDone',value:25,label:'25 практик'},{type:'streak',value:7,label:'Стрик 7'},{type:'cat',cat:'disc',value:10,label:'10 дисциплины'}]},
+  {n:3,icon:'🔥',title:'Ковка',subtitle:'Тело и воля',desc:'Тело — инструмент. Ум — слуга.',
+    reqs:[{type:'totalDone',value:60,label:'60 практик'},{type:'streak',value:14,label:'Стрик 14'},{type:'cat',cat:'body',value:20,label:'20 телесных'},{type:'barrier',value:1,label:'1 преграда'}]},
+  {n:4,icon:'🌊',title:'Поток',subtitle:'Осознанность',desc:'Действия без усилий.',
+    reqs:[{type:'totalDone',value:120,label:'120 практик'},{type:'streak',value:21,label:'Стрик 21'},{type:'cat',cat:'breath',value:30,label:'30 дыхательных'},{type:'cat',cat:'mind',value:30,label:'30 разума'}]},
+  {n:5,icon:'👁️',title:'Свидетель',subtitle:'Наблюдатель',desc:'Видишь себя со стороны.',
+    reqs:[{type:'totalDone',value:250,label:'250 практик'},{type:'streak',value:30,label:'Стрик 30'},{type:'askesis',value:1,label:'1 аскеза'},{type:'barrier',value:3,label:'3 преграды'}]},
+  {n:6,icon:'☀️',title:'Единство',subtitle:'Растворение',desc:'Границы истончаются.',
+    reqs:[{type:'totalDone',value:500,label:'500 практик'},{type:'streak',value:60,label:'Стрик 60'},{type:'askesis',value:3,label:'3 аскезы'},{type:'barrier',value:5,label:'5 преград'}]},
+  {n:7,icon:'🌟',title:'Сотворчество',subtitle:'Полное осознание',desc:'Ты — наблюдатель и творец.',
+    reqs:[{type:'totalDone',value:1000,label:'1000 практик'},{type:'streak',value:100,label:'Стрик 100'},{type:'askesis',value:5,label:'5 аскез'},{type:'barrier',value:7,label:'Все 7 преград'}]}
+];
+
+/* БАЗА ЗНАНИЙ — расширенная */
+var KNOWLEDGE_BASE=[
+  {cat:'🌬️ Дыхательные практики',items:[
+    {name:'Дыхание 4-7-8',what:'Вдох 4 · задержка 7 · выдох 8. Мощный успокоитель.',
+      benefits:['Парасимпатическая система','Меньше тревоги за 2-3 мин','Помогает заснуть','Снижает давление'],
+      how:'Сядь ровно. Вдох носом 4 сек, задержка 7, выдох ртом 8. 4 цикла.',when:'Перед сном, при стрессе.'},
+    {name:'Квадратное дыхание',what:'4-4-4-4. Ритм квадрата.',
+      benefits:['Фокус','Используется спецназом','Баланс нервной системы','Контроль эмоций'],
+      how:'4 вдох → 4 держишь → 4 выдох → 4 держишь. 5-10 мин.',when:'Перед важной встречей.'},
+    {name:'Вима Хофа',what:'30 быстрых вдохов + задержка.',
+      benefits:['Энергия','Иммунитет','Холод переносить','Против воспалений'],
+      how:'30 глубоких быстрых вдохов. Выдохни и задержи. 3-4 раунда.',when:'Утром, перед холодным душем.'},
+    {name:'Нади Шодхана',what:'Попеременное через ноздри.',
+      benefits:['Баланс полушарий','Успокаивает ум','Ясность','Меньше головной боли'],
+      how:'Зажми правую — вдох левой. Зажми левую — выдох правой. И наоборот.',when:'Перед медитацией.'},
+    {name:'Холотропное дыхание',what:'Глубокое связное дыхание без пауз. Психоделический эффект.',
+      benefits:['Работа с травмами','Изменённые состояния','Катарсис','Глубокое расслабление'],
+      how:'Лёжа. Дыши глубоко и связно 40-60 мин. Не делай в одиночку в первый раз.',when:'С опытным ведущим.'},
+    {name:'Осознанное дыхание',what:'Просто наблюдай за дыханием.',
+      benefits:['Осознанность','Тишина ума','Глубже медитация','Меньше кортизола'],
+      how:'Закрой глаза. Внимание на кончик носа. Вдох — выдох.',when:'В любой момент.'}
+  ]},
+  {cat:'🧘 Медитация',items:[
+    {name:'Медитация наблюдения',what:'Наблюдай за дыханием и мыслями.',
+      benefits:['Префронтальная кора растёт','Меньше тревоги','Память+концентрация','Меньше воспаления'],
+      how:'Сядь. Спина прямая. Глаза закрыты. Наблюдай дыхание. Мысли приходят — вернись.',when:'Утром и вечером.'},
+    {name:'Мета-медитация',what:'Пожелание счастья себе и другим.',
+      benefits:['Меньше одиночества','Эмпатия','Крепкие связи','Защита от депрессии'],
+      how:'Пожелай себе: «Пусть я буду счастлив». Потом близкому. Потом врагу.',when:'Утром, при обиде.'},
+    {name:'Сканирование тела',what:'Внимание по всему телу.',
+      benefits:['Снимает напряжение','Чувствительность','Сон','Быть в теле'],
+      how:'Ляг. Внимание в стопы → поднимайся к голове. 15-20 мин.',when:'Перед сном.'},
+    {name:'Випассана',what:'Древняя техника наблюдения за ощущениями.',
+      benefits:['Глубокое понимание ума','Освобождение от реакций','Прозрение','Уравновешенность'],
+      how:'10 дней молчания, наблюдение за дыханием и ощущениями по 10 часов в день.',when:'Ретрит раз в год.'},
+    {name:'Медитация на пустоту',what:'Созерцание пустоты за пределами форм.',
+      benefits:['Понимание природы ума','Освобождение','Покой','Растворение эго'],
+      how:'Спроси: «Что остаётся, когда исчезают мысли?». Побудь в этом.',when:'Для опытных.'}
+  ]},
+  {cat:'⚔️ Дисциплина',items:[
+    {name:'Холодный душ',what:'Заканчивай холодной 30 сек — 3 мин.',
+      benefits:['Дофамин +250%','Жиросжигание','Настроение','Иммунитет'],
+      how:'После обычного душа — выключай горячую. С 30 сек до 3 мин.',when:'Утром.'},
+    {name:'Ранний подъём',what:'Вставать в 5-7 утра.',
+      benefits:['Пик дофамина','Тишина','Циркадные ритмы','Время'],
+      how:'Ложись в 22:00. Телефон после 21:00 — нет.',when:'Ежедневно.'},
+    {name:'Голодание',what:'Окно еды 8ч, голод 16ч.',
+      benefits:['Аутофагия','Инсулин','Кетоны','Продление жизни'],
+      how:'Начни с 12ч. Расти до 16. В окне — вода, чай, кофе.',when:'Ежедневно.'},
+    {name:'Дофаминовое голодание',what:'Полный отказ от быстрых удовольствий на день.',
+      benefits:['Восстановление рецепторов','Ясность ума','Мотивация','Тишина'],
+      how:'Ни соцсетей, ни сахара, ни порно, ни музыки. Только база: еда, вода, прогулка.',when:'Раз в неделю.'},
+    {name:'Цифровая тишина',what:'Первый час без телефона.',
+      benefits:['Дофамин','Фокус','Меньше тревоги','Слышишь себя'],
+      how:'Телефон в другой комнате. Утром — вода, дыхание, дневник.',when:'Утром.'},
+    {name:'Монозадача',what:'Одно дело за раз.',
+      benefits:['+40% продуктивности','Меньше ошибок','Погружение','Меньше выгорания'],
+      how:'Одна задача. Телефон далеко. 25-90 минут.',when:'При работе.'}
+  ]},
+  {cat:'💪 Тело',items:[
+    {name:'Отжимания',what:'Базовая сила.',
+      benefits:['Сила верха','Осанка','Тестостерон','Где угодно'],
+      how:'3×10 → 5×50. Прогрессия: обычные → широкие → узкие → с хлопком.',when:'Утром.'},
+    {name:'Приседания',what:'Ноги, ягодицы, кор.',
+      benefits:['Гормон роста','Метаболизм','Ноги','Подвижность'],
+      how:'Ноги на ширине плеч. До параллели. 3×20 → 100+.',when:'Ежедневно.'},
+    {name:'Планка',what:'Статика на кор.',
+      benefits:['Защита спины','Осанка','Поясница','Стойкость'],
+      how:'Локти под плечами. Тело — линия. 30→60→90→120 сек.',when:'Утром или вечером.'},
+    {name:'Пробежка',what:'Медленный бег.',
+      benefits:['Выносливость','BDNF','Против депрессии','Сердце'],
+      how:'С 1-2 км. Пульс 120-140. Дыши носом.',when:'Утром или вечером.'},
+    {name:'Растяжка / йога',what:'Статические позы.',
+      benefits:['Зажимы','Стресс','Сон','Связь тела и ума'],
+      how:'Поза ребёнка, кошка-корова, собака, голубь. 15-20 мин.',when:'Вечером.'},
+    {name:'Сауна / баня',what:'Тепловое воздействие + контраст.',
+      benefits:['Детокс','Иммунитет','Восстановление','Гормон роста'],
+      how:'10-20 мин в сауне → холодная вода → повтор 3-4 раза.',when:'Раз в неделю.'}
+  ]},
+  {cat:'🧠 Разум',items:[
+    {name:'Глубокая работа',what:'Фокус без отвлечений на одну задачу.',
+      benefits:['+500% продуктивности','Мастерство','Погружение','Смысл'],
+      how:'2-4 часа без телефона, музыки, людей. Одна задача.',when:'Утром, первый блок.'},
+    {name:'Работа с тенью',what:'Исследование тёмных сторон себя.',
+      benefits:['Целостность','Меньше проекций','Больше энергии','Настоящая свобода'],
+      how:'Дневник: что в других раздражает? Что осуждаешь? Это твоя тень. Прими.',when:'Раз в неделю.'},
+    {name:'Дневник',what:'Письменная рефлексия.',
+      benefits:['Ясность','Катарсис','Понимание паттернов','Память'],
+      how:'Каждый вечер: что было, что чувствовал, что важно.',when:'Вечером.'},
+    {name:'Чтение',what:'Медленное чтение с заметками.',
+      benefits:['Знания','Словарный запас','Эмпатия','Фокус'],
+      how:'20-30 страниц с карандашом. Выписывай главное.',when:'Утром или вечером.'}
+  ]},
+  {cat:'✨ Дух',items:[
+    {name:'Я — наблюдатель',what:'Ты не мысли, не эмоции, не тело.',
+      benefits:['Свобода от отождествления','Меньше страха','Покой','Свобода'],
+      how:'Спроси: «Кто я?». Мысли приходят — ты их видишь. Ты не они.',when:'При сильных эмоциях.'},
+    {name:'Свидетельствование',what:'Наблюдай без вмешательства.',
+      benefits:['Осознанность','Эмоции теряют власть','Выбор вместо реакции','Тишина'],
+      how:'Периодически: «Что я сейчас делаю? Что чувствую?». Заметь.',when:'Везде.'},
+    {name:'Уединение',what:'Время в полной тишине.',
+      benefits:['Слышишь душу','Понимание','Тишина ума','Ответы'],
+      how:'С 1 часа. Потом полдня. Потом — день.',when:'Раз в неделю.'},
+    {name:'Кто я?',what:'Самоисследование по методу Раманы Махарши.',
+      benefits:['Растворение эго','Покой','Прозрение','Истинное Я'],
+      how:'Задавай: «Кто я?». Мысли приходят — спрашивай: «Кому пришла эта мысль?».',when:'Ежедневно.'},
+    {name:'Единство',what:'Ты — проявление мира.',
+      benefits:['Пропадает отделённость','Сострадание','Меньше страха','Блаженство'],
+      how:'Смотри на природу. Ты — часть. Границы растворяются.',when:'На природе.'}
+  ]},
+  {cat:'💚 Здоровье',items:[
+    {name:'Сон 7-9 часов',what:'Фундамент всего.',
+      benefits:['Гормоны','Память','Иммунитет','Сила воли'],
+      how:'Ложись в одно время. Тёмная, прохладная комната. Без экранов за час.',when:'Ежедневно.'},
+    {name:'Вода 2 литра',what:'Мозг — 75% вода.',
+      benefits:['Ясность','Энергия','Метаболизм','Кожа'],
+      how:'Стакан утром. 30 мл на кг тела. Носи бутылку.',when:'Весь день.'},
+    {name:'Солнце 30 мин',what:'Витамин D, серотонин.',
+      benefits:['Настроение','Иммунитет','Гормоны','Сон'],
+      how:'15-30 мин солнца утром. Без очков.',when:'Утром.'},
+    {name:'Чистое питание',what:'Цельная еда без обработки.',
+      benefits:['Энергия','Ясность','Вес','Долголетие'],
+      how:'Белок + овощи + полезные жиры. Убери сахар и транс-жиры.',when:'Каждый приём.'},
+    {name:'Цифровой детокс',what:'Полный отказ от экранов.',
+      benefits:['Дофамин','Внимание','Сон','Спокойствие'],
+      how:'Начни с 1 часа. Расти до целого дня.',when:'Раз в неделю.'},
+    {name:'Инсулиновое голодание',what:'Ограничение окна еды для инсулина.',
+      benefits:['Инсулин','Вес','Энергия','Аутофагия'],
+      how:'Ешь только 8 часов. 16 — голод. Вода, чай, кофе без сахара.',when:'Ежедневно.'}
+  ]},
+  {cat:'🧬 Нейробиология',items:[
+    {name:'Нейропластичность',what:'Мозг меняется на протяжении всей жизни.',
+      benefits:['Можно научиться чему угодно','Новые привычки','Восстановление','Гибкость ума'],
+      how:'Повторяй действие. Мозг строит новые связи. Через 21 день — привычка.',when:'Постоянно.'},
+    {name:'Дофамин',what:'Медиатор мотивации, не удовольствия.',
+      benefits:['Понимаешь свои импульсы','Мотивация','Контроль','Фокус'],
+      how:'Дофамин выделяется В ОЖИДАНИИ награды. Не лишай себя — управляй.',when:'Всегда.'},
+    {name:'Аутофагия',what:'Очистка клеток организма.',
+      benefits:['Омоложение','Раковые клетки','Нейрозащита','Долголетие'],
+      how:'Голодание 16+ часов активирует. Нобелевка 2016.',when:'Интервальное голодание.'},
+    {name:'BDNF',what:'Белок, растящий нейроны.',
+      benefits:['Память','Настроение','Антидепрессия','Нейрогенез'],
+      how:'Спорт, холод, голодание, омега-3 повышают BDNF.',when:'Регулярно.'},
+    {name:'Кортизол',what:'Гормон стресса.',
+      benefits:['Понимание тревоги','Контроль','Сон','Вес'],
+      how:'Утренний пик — норма. Хронический — враг. Сон, спорт, медитация снижают.',when:'Каждый день.'}
+  ]},
+  {cat:'📿 Философия',items:[
+    {name:'Стоицизм',what:'Управляй тем, что в твоей власти.',
+      benefits:['Устойчивость','Спокойствие','Практичность','Свобода'],
+      how:'Раздели: что могу изменить, что нет. Работай с первым. Прими второе.',when:'Каждый день.'},
+    {name:'Дзен',what:'Прямое постижение реальности.',
+      benefits:['Простота','Покой','Присутствие','Спонтанность'],
+      how:'Не привязывайся. Смотри прямо. Делай что делаешь.',when:'В каждом действии.'},
+    {name:'Экзистенциализм',what:'Ты создаёшь смысл сам.',
+      benefits:['Свобода','Ответственность','Смысл','Подлинность'],
+      how:'Ты не жертва обстоятельств. Ты выбираешь. Прими это.',when:'При каждом выборе.'},
+    {name:'Уровни сознания',what:'Разные состояния восприятия.',
+      benefits:['Понимание пути','Прогресс','Ориентиры','Терпение'],
+      how:'От выживания → к состоянию «я — свидетель» → «я — всё».',when:'Постепенно.'}
+  ]}
+];
+
+/* ============================================================
+   СОСТОЯНИЕ
+============================================================ */
+var state=Object.assign({},DEFAULT_STATE);
+try{var saved=localStorage.getItem(STORAGE);if(saved)state=Object.assign({},DEFAULT_STATE,JSON.parse(saved));}catch(e){}
+
+function save(){try{localStorage.setItem(STORAGE,JSON.stringify(state));}catch(e){}}
+function getLevel(xp){var l=0;for(var i=0;i<LEVELS.length;i++)if(xp>=LEVELS[i].xp)l=i;return l;}
+function getMultiplier(){return LEVELS[getLevel(state.xp)].mult;}
+function getAllPractices(){return BASE_PRACTICES.concat(state.customPractices||[]);}
+function getTier(id){return (state.practiceTiers&&state.practiceTiers[id])||1;}
+function countPractice(id){return (state.completionCounter&&state.completionCounter[id])||0;}
+function countCat(s,cat){var ids=[];for(var i=0;i<BASE_PRACTICES.length;i++)if(BASE_PRACTICES[i].cat===cat)ids.push(BASE_PRACTICES[i].id);var sum=0;for(var j=0;j<ids.length;j++)sum+=countPractice(ids[j]);return sum;}
+function closeModal(id){var el=document.getElementById(id);if(el)el.classList.remove('active');}
+
+function ensureNewDay(){
+  if(state.lastDate!==todayStr()){
+    var y=new Date(Date.now()-86400000).toDateString();
+    state.streak=(state.lastDate===y)?state.streak+1:1;
+    if(state.streak>state.maxStreak)state.maxStreak=state.streak;
+    state.totalDays++;
+    state.todayDone=[];
+    state.lastDate=todayStr();
+    generateDailyQuests();
+    generateDailyCard();
+    save();
+  }
+}
+
+function generateDailyQuests(){
+  var today=dateKey(new Date());
+  if(state.dailyQuests.date===today)return;
+  var pool=QUEST_POOL.slice().sort(function(){return Math.random()-0.5;});
+  state.dailyQuests={date:today,list:pool.slice(0,3).map(function(q){return q.id;}),completed:[]};
+  save();
+}
+
+function generateDailyCard(){
+  var today=dateKey(new Date());
+  if(state.dailyCard&&state.dailyCard.date===today)return;
+  var card=DESTINY_CARDS[Math.floor(Math.random()*DESTINY_CARDS.length)];
+  state.dailyCard={date:today,id:card.id,done:false};
+  save();
+}
+
+function calculateBarrierProgress(barrierId){
+  var b=null;
+  for(var i=0;i<BARRIERS.length;i++)if(BARRIERS[i].id===barrierId)b=BARRIERS[i];
+  if(!b)return 0;
+  return Math.min(100,(state.xp/b.requiredXp)*100);
+}
+function isBarrierCleared(id){return (state.barrierProgress&&state.barrierProgress[id])||false;}
+function checkBarriers(){
+  for(var i=0;i<BARRIERS.length;i++){
+    var b=BARRIERS[i];
+    if(isBarrierCleared(b.id))continue;
+    if(calculateBarrierProgress(b.id)>=100){
+      if(!state.barrierProgress)state.barrierProgress={};
+      state.barrierProgress[b.id]=true;
+      state.barriersCleared=(state.barriersCleared||0)+1;
+      state.xp+=250;
+      showToast('🚧 Преграда пройдена: '+b.name+'! +250 XP');
+      if(state.sound)achSound();
+      checkAchievements();checkPath();save();
+    }
+  }
+}
+
+function completePractice(id,xp){
+  var mult=getMultiplier();
+  var gained=Math.round(xp*mult);
+  state.xp+=gained;
+  state.totalDone++;
+  if(!state.completionCounter)state.completionCounter={};
+  state.completionCounter[id]=(state.completionCounter[id]||0)+1;
+  var k=dateKey(new Date());
+  state.history[k]=(state.history[k]||0)+gained;
+  if(!state.practiceTiers)state.practiceTiers={};
+  var p=null;
+  var all=getAllPractices();
+  for(var i=0;i<all.length;i++)if(all[i].id===id)p=all[i];
+  if(p&&p.tiers){
+    var cur=getTier(id);
+    var maxT=p.tiers.length;
+    var count=state.completionCounter[id];
+    var newT=Math.min(maxT,1+Math.floor(count/5));
+    if(newT>cur){state.practiceTiers[id]=newT;showToast('⭐ '+p.name+' · Уровень '+newT+'!');}
+  }
+  save();
+  showToast('+'+gained+' XP'+(mult>1?' (×'+mult+')':'')+' ✨');
+  if(state.sound)beep();
+  checkAchievements();checkQuests();checkBarriers();checkPath();checkDailyCard();
+}
+
+function checkDailyCard(){
+  if(!state.dailyCard||state.dailyCard.done)return;
+  var card=null;
+  for(var i=0;i<DESTINY_CARDS.length;i++)if(DESTINY_CARDS[i].id===state.dailyCard.id)card=DESTINY_CARDS[i];
+  if(!card)return;
+  if(card.check(state)){
+    state.dailyCard.done=true;
+    state.xp+=card.reward;
+    state.cardsCompleted=(state.cardsCompleted||0)+1;
+    showToast('🎴 Карта судьбы: +'+card.reward+' XP');
+    if(state.sound)achSound();
+    checkAchievements();save();
+  }
+}
+
+function checkQuests(){
+  var dq=state.dailyQuests;
+  if(!dq||dq.date!==dateKey(new Date()))return;
+  for(var i=0;i<dq.list.length;i++){
+    var qid=dq.list[i];
+    if(dq.completed.indexOf(qid)>=0)continue;
+    var q=null;
+    for(var j=0;j<QUEST_POOL.length;j++)if(QUEST_POOL[j].id===qid)q=QUEST_POOL[j];
+    if(!q)continue;
+    if(q.check(state)){
+      dq.completed.push(qid);
+      state.xp+=q.reward;
+      showToast('📜 Квест: +'+q.reward+' XP');
+      save();
+    }
+  }
+}
+
+function checkPathStep(step){
+  var s=AWAKENING_PATH[step-1];
+  if(!s)return false;
+  for(var i=0;i<s.reqs.length;i++){
+    var r=s.reqs[i],ok=false;
+    if(r.type==='totalDone')ok=state.totalDone>=r.value;
+    if(r.type==='streak')ok=state.maxStreak>=r.value;
+    if(r.type==='cat')ok=countCat(state,r.cat)>=r.value;
+    if(r.type==='askesis')ok=(state.askesis||[]).filter(function(a){return a.completed;}).length>=r.value;
+    if(r.type==='barrier')ok=(state.barriersCleared||0)>=r.value;
+    if(!ok)return false;
+  }
+  return true;
+}
+function checkPath(){
+  var changed=false;
+  for(var i=state.currentPathStep||0;i<AWAKENING_PATH.length;i++){
+    if(checkPathStep(i+1)){
+      state.currentPathStep=i+1;changed=true;
+      showToast('🗺️ Ступень '+(i+1)+': '+AWAKENING_PATH[i].title+'!');
+      if(state.sound)achSound();
+    }else break;
+  }
+  if(changed){save();checkAchievements();}
+}
+
+function checkAchievements(){
+  for(var i=0;i<ACHIEVEMENTS.length;i++){
+    var a=ACHIEVEMENTS[i];
+    if(state.achievements.indexOf(a.id)>=0)continue;
+    try{if(a.check(state)){state.achievements.push(a.id);save();showAchievementPopup(a);}}catch(e){}
+  }
+}
+
+function showAchievementPopup(a){
+  var p=document.getElementById('achPopup');
+  document.getElementById('achPopupIcon').textContent=a.icon;
+  document.getElementById('achPopupName').textContent=a.name;
+  p.classList.add('show');
+  if(state.sound)achSound();
+  setTimeout(function(){p.classList.remove('show');},3200);
+}
+
+/* ============================================================
+   RENDER
+============================================================ */
+function render(){
+  ensureNewDay();generateDailyQuests();generateDailyCard();
+  checkPath();checkQuests();checkBarriers();checkDailyCard();
+
+  var lvlIdx=getLevel(state.xp);
+  var cur=LEVELS[lvlIdx];
+  var next=LEVELS[lvlIdx+1];
+
+  document.getElementById('levelBadge').textContent='Ур. '+(lvlIdx+1)+' · '+cur.name;
+  document.getElementById('rankTitle').textContent=RANK_TITLES[lvlIdx]||'Мастер';
+  document.getElementById('avatar').textContent=state.avatar;
+  document.getElementById('statRank').textContent=cur.rank;
+
+  if(next){
+    var prog=(state.xp-cur.xp)/(next.xp-cur.xp)*100;
+    document.getElementById('xpFill').style.width=prog+'%';
+    document.getElementById('xpText').textContent=state.xp+' / '+next.xp+' XP · ×'+cur.mult;
+  }else{
+    document.getElementById('xpFill').style.width='100%';
+    document.getElementById('xpText').textContent=state.xp+' XP · МАКС · ×'+cur.mult;
+  }
+
+  document.getElementById('statStreak').textContent=state.streak;
+  document.getElementById('statToday').textContent=state.todayDone.length;
+  document.getElementById('statTotal').textContent=state.totalDays;
+
+  renderCard();renderDNA();renderPath();renderPractices();renderQuests();renderBarriers();
+  renderGoals();renderMood();renderHealth();renderAskesis();renderKnowledge();
+  renderProgress();renderAwards();renderCustomList();renderSettings();
+
+  if(state.theme&&state.theme!=='dark')document.documentElement.setAttribute('data-theme',state.theme);
+  else document.documentElement.removeAttribute('data-theme');
+}
+
+function renderCard(){
+  var c=document.getElementById('cardContainer');
+  if(!state.dailyCard){c.innerHTML='';return;}
+  var card=null;
+  for(var i=0;i<DESTINY_CARDS.length;i++)if(DESTINY_CARDS[i].id===state.dailyCard.id)card=DESTINY_CARDS[i];
+  if(!card){c.innerHTML='';return;}
+  var done=state.dailyCard.done;
+  c.innerHTML='<div class="card-day '+(done?'done':'')+'">'+
+    '<div class="card-day-label">'+(done?'✅ Выполнена':'🎴 Карта дня')+'</div>'+
+    '<div class="card-day-icon">'+card.icon+'</div>'+
+    '<div class="card-day-title">'+card.title+'</div>'+
+    '<div class="card-day-desc">'+card.desc+'</div>'+
+    '<div class="card-day-reward">+'+(done?'✓ ':'')+card.reward+' XP</div>'+
+    '</div>';
+}
+
+function renderDNA(){
+  var w=document.getElementById('dnaWrap');
+  var cells='';
+  var today=dateKey(new Date());
+  for(var i=89;i>=0;i--){
+    var d=new Date(Date.now()-i*86400000);
+    var k=dateKey(d);
+    var xp=state.history[k]||0;
+    var level=0;
+    if(xp>=100)level=4;
+    else if(xp>=60)level=3;
+    else if(xp>=30)level=2;
+    else if(xp>0)level=1;
+    var cls='dna-cell';
+    if(level>0)cls+=' level-'+level;
+    if(k===today)cls+=' today';
+    cells+='<div class="'+cls+'" title="'+k+': '+xp+' XP"></div>';
+  }
+  w.innerHTML='<div class="dna-title">90 дней твоего пути</div><div class="dna-grid">'+cells+'</div>'+
+    '<div class="dna-legend">'+
+    '<span><span class="dot" style="background:rgba(79,172,254,0.35);"></span>1-29 XP</span>'+
+    '<span><span class="dot" style="background:rgba(139,124,255,0.55);"></span>30-59</span>'+
+    '<span><span class="dot" style="background:rgba(240,147,251,0.75);"></span>60-99</span>'+
+    '<span><span class="dot" style="background:linear-gradient(135deg,#ffd166,#f5576c);"></span>100+</span>'+
+    '</div>';
+}
+
+function renderPath(){
+  var h='';
+  for(var i=0;i<AWAKENING_PATH.length;i++){
+    var s=AWAKENING_PATH[i],n=i+1;
+    var isC=state.currentPathStep>=n,isCur=state.currentPathStep===i,isL=state.currentPathStep<i;
+    var cls='path-step';
+    if(isC)cls+=' completed';
+    if(isCur)cls+=' current';
+    if(isL)cls+=' locked';
+    var reqs='';
+    for(var j=0;j<s.reqs.length;j++){
+      var r=s.reqs[j],done=false,current='';
+      if(r.type==='totalDone'){done=state.totalDone>=r.value;current=state.totalDone+' / '+r.value;}
+      if(r.type==='streak'){done=state.maxStreak>=r.value;current=state.maxStreak+' / '+r.value;}
+      if(r.type==='cat'){var c=countCat(state,r.cat);done=c>=r.value;current=c+' / '+r.value;}
+      if(r.type==='askesis'){var c2=(state.askesis||[]).filter(function(a){return a.completed;}).length;done=c2>=r.value;current=c2+' / '+r.value;}
+      if(r.type==='barrier'){done=(state.barriersCleared||0)>=r.value;current=(state.barriersCleared||0)+' / '+r.value;}
+      reqs+='<div class="path-req '+(done?'done':'pending')+'"><span>'+(done?'✅':'⏳')+' '+r.label+'</span><span>'+current+'</span></div>';
+    }
+    h+='<div class="'+cls+'"><div class="path-header"><div class="path-num">'+s.icon+'</div>'+
+      '<div style="flex:1;"><div class="path-title">Ступень '+n+': '+s.title+'</div>'+
+      '<div class="path-subtitle">'+s.subtitle+'</div></div></div>'+
+      '<div class="path-desc">'+s.desc+'</div>'+
+      (isCur||!isC?'<div class="path-reqs">'+reqs+'</div>':'')+
+      '</div>';
+  }
+  document.getElementById('pathContainer').innerHTML=h;
+}
+
+function renderPractices(){
+  var lvl=getLevel(state.xp);
+  var cats=[
+    {key:'disc',title:'⚔️ Дисциплина'},{key:'breath',title:'🌬️ Дыхание'},
+    {key:'body',title:'💪 Тело'},{key:'mind',title:'🧠 Разум'},
+    {key:'spirit',title:'✨ Дух'},{key:'health',title:'💚 Здоровье'}
+  ];
+  var h='',all=getAllPractices();
+  for(var c=0;c<cats.length;c++){
+    var cat=cats[c];
+    var list=[];
+    for(var k=0;k<all.length;k++)if(all[k].cat===cat.key)list.push(all[k]);
+    if(!list.length)continue;
+    h+='<div class="section-title">'+cat.title+'</div>';
+    for(var i=0;i<list.length;i++){
+      var p=list[i],tier=getTier(p.id);
+      var tiers=p.tiers||[{name:p.desc||'',xp:p.xp||15,lvl:0}];
+      var td=tiers[tier-1]||tiers[0];
+      var locked=lvl<(td.lvl||0);
+      var done=state.todayDone.indexOf(p.id)>=0;
+      var mastered=tier>=tiers.length&&countPractice(p.id)>=25;
+      var dots='';
+      for(var t=0;t<tiers.length;t++)dots+='<div class="tier-dot '+(t<tier?'filled':'')+'"></div>';
+      h+='<div class="practice '+(done?'done':'')+' '+(locked?'locked':'')+' '+(mastered?'mastered':'')+'">'+
+        '<div class="practice-row" onclick="handlePracticeClick(\''+p.id+'\')">'+
+        '<div class="practice-icon icon-'+p.cat+'">'+p.icon+'</div>'+
+        '<div class="practice-info">'+
+        '<div class="practice-name">'+p.name+(mastered?' <span class="badge gold">MAX</span>':'')+'</div>'+
+        '<div class="practice-desc">'+(td.name||'')+'</div>'+
+        '<div class="practice-meta"><span class="badge">Ур. '+tier+'/'+tiers.length+'</span>'+
+        (locked?'<span class="badge blue">Откр. Ур. '+(td.lvl+1)+'</span>':'')+'</div>'+
+        '<div class="practice-tiers">'+dots+'</div></div>'+
+        '<div class="practice-xp">+'+Math.round((td.xp||15)*getMultiplier())+'</div>'+
+        '</div>'+
+        '<div class="practice-actions">'+
+        '<button class="p-btn downgrade" '+(tier<=1?'disabled':'')+' onclick="event.stopPropagation(); changeTier(\''+p.id+'\', -1)">▼ Ниже</button>'+
+        '<button class="p-btn upgrade" '+(tier>=tiers.length?'disabled':'')+' onclick="event.stopPropagation(); changeTier(\''+p.id+'\', 1)">▲ Выше</button>'+
+        '<button class="p-btn info" onclick="event.stopPropagation(); showPracticeInfo(\''+p.id+'\')">ℹ</button>'+
+        '</div></div>';
+    }
+  }
+  document.getElementById('practicesContainer').innerHTML=h;
+}
+
+function handlePracticeClick(id){
+  var p=null,all=getAllPractices();
+  for(var i=0;i<all.length;i++)if(all[i].id===id)p=all[i];
+  if(!p)return;
+  var tier=getTier(id);
+  var tiers=p.tiers||[{name:p.desc,xp:p.xp,breath:p.breath}];
+  var td=tiers[tier-1]||tiers[0];
+  var xp=td.xp||15;
+  var breath=td.breath||p.breath;
+  if(breath){openBreath(breath,id,xp);return;}
+  if(state.todayDone.indexOf(id)>=0){
+    state.todayDone=state.todayDone.filter(function(x){return x!==id;});
+    var mult=getMultiplier();
+    state.xp=Math.max(0,state.xp-Math.round(xp*mult));
+    state.totalDone=Math.max(0,state.totalDone-1);
+    if(state.completionCounter[id])state.completionCounter[id]--;
+    save();render();showToast('−'+Math.round(xp*mult)+' XP');
+  }else{
+    state.todayDone.push(id);
+    completePractice(id,xp);
+    render();
+  }
+}
+
+function changeTier(id,delta){
+  var p=null,all=getAllPractices();
+  for(var i=0;i<all.length;i++)if(all[i].id===id)p=all[i];
+  if(!p||!p.tiers)return;
+  var cur=getTier(id);
+  var newT=Math.max(1,Math.min(p.tiers.length,cur+delta));
+  if(newT===cur)return;
+  if(!state.practiceTiers)state.practiceTiers={};
+  state.practiceTiers[id]=newT;
+  state.todayDone=state.todayDone.filter(function(x){return x!==id;});
+  save();render();showToast('Уровень: '+newT+' / '+p.tiers.length);
+  if(newT===p.tiers.length)checkAchievements();
+}
+
+function showPracticeInfo(id){
+  var p=null,all=getAllPractices();
+  for(var i=0;i<all.length;i++)if(all[i].id===id)p=all[i];
+  if(!p)return;
+  document.getElementById('infoTitle').textContent=p.icon+' '+p.name;
+  var tiers=p.tiers||[],h='';
+  for(var j=0;j<tiers.length;j++){
+    var t=tiers[j],reached=j+1<=getTier(id);
+    h+='<div style="margin-bottom:10px;padding:12px;background:rgba(255,255,255,0.04);border-radius:12px;border-left:3px solid '+(reached?'#4cd964':'rgba(245,241,255,0.3)')+';">'+
+      '<b style="color:'+(reached?'#4cd964':'#4facfe')+';">Уровень '+(j+1)+':</b> '+t.name+'<br>'+
+      '<span style="font-size:11.5px;color:var(--text-soft);">+'+t.xp+' XP · открывается с ур. '+(t.lvl+1)+'</span></div>';
+  }
+  document.getElementById('infoBody').innerHTML=h+'<div style="margin-top:14px;font-size:12.5px;">📖 Подробнее — в «Базе знаний».</div>';
+  document.getElementById('infoModal').classList.add('active');
+}
+
+function renderQuests(){
+  var dq=state.dailyQuests;
+  if(!dq||!dq.list.length)return;
+  var h='';
+  for(var i=0;i<dq.list.length;i++){
+    var qid=dq.list[i],q=null;
+    for(var j=0;j<QUEST_POOL.length;j++)if(QUEST_POOL[j].id===qid)q=QUEST_POOL[j];
+    if(!q)continue;
+    var done=dq.completed.indexOf(qid)>=0;
+    h+='<div class="quest '+(done?'done':'')+'">'+
+      '<div class="quest-icon">'+(done?'✅':q.icon)+'</div>'+
+      '<div class="quest-info"><div class="quest-name">'+q.name+'</div>'+
+      '<div class="quest-desc">'+q.desc+'</div></div>'+
+      '<div class="quest-reward">+'+q.reward+'</div></div>';
+  }
+  document.getElementById('questsContainer').innerHTML=h;
+  var step=AWAKENING_PATH[state.currentPathStep]||AWAKENING_PATH[0];
+  document.getElementById('phaseText').textContent='Ступень '+state.currentPathStep+': '+step.title+' · '+step.subtitle;
+}
+
+function renderBarriers(){
+  var h='',prevCleared=true;
+  for(var i=0;i<BARRIERS.length;i++){
+    var b=BARRIERS[i];
+    var cleared=isBarrierCleared(b.id);
+    var prog=calculateBarrierProgress(b.id);
+    var isActive=!cleared&&prevCleared;
+    var isLocked=!cleared&&!isActive;
+    var cls='barrier-card';
+    if(cleared)cls+=' cleared';
+    else if(isActive)cls+=' active';
+    else if(isLocked)cls+=' locked';
+    var status=cleared?'✨ Пройдена':(isActive?'🔥 Активна':'🔒 Закрыта');
+    var progT=cleared?'100%':Math.round(prog)+'%';
+    h+='<div class="'+cls+'"><div class="barrier-head">'+
+      '<div class="barrier-icon">'+b.icon+'</div>'+
+      '<div class="barrier-info"><div class="barrier-name">'+b.name+'</div>'+
+      '<div class="barrier-tag">'+b.tag+' · '+status+'</div></div></div>'+
+      '<div class="barrier-desc">'+b.desc+'</div>'+
+      '<div class="barrier-progress-bar"><div class="barrier-progress-fill" style="width:'+prog+'%"></div></div>'+
+      '<div class="barrier-progress-text"><span>Прогресс</span><span>'+progT+'</span></div>'+
+      '<div class="barrier-hint"><b>Как преодолеть:</b> '+b.hint+'</div></div>';
+    prevCleared=cleared;
+  }
+  document.getElementById('barriersContainer').innerHTML=h;
+}
+
+function renderGoals(){
+  var h='';
+  if(state.goals&&state.goals.length){
+    for(var i=0;i<state.goals.length;i++){
+      var g=state.goals[i];
+      var days=Math.ceil((new Date(g.deadline)-new Date())/86400000);
+      var total=Math.ceil((new Date(g.deadline)-new Date(g.created))/86400000);
+      var passed=total-days;
+      var prog=total>0?Math.min(100,passed/total*100):100;
+      if(days<0)days=0;
+      h+='<div class="goal-card '+(g.completed?'':'active')+'">'+
+        '<div class="goal-head">'+
+        '<div><div class="goal-title">'+g.title+'</div>'+
+        '<div class="goal-deadline">'+new Date(g.deadline).toLocaleDateString('ru-RU')+'</div></div>'+
+        '<div><div class="goal-days">'+(g.completed?'✓':days)+'</div>'+
+        '<div class="goal-days-label">'+(g.completed?'Готово':'дней')+'</div></div></div>'+
+        '<div class="goal-progress-bar"><div class="goal-progress-fill" style="width:'+prog+'%"></div></div>'+
+        '<div class="goal-progress-text"><span>Прогресс</span><span>'+Math.round(prog)+'%</span></div>'+
+        '<div class="askesis-actions" style="margin-top:14px;">'+
+        (g.completed?'':'<button class="mini-btn green" onclick="completeGoal('+i+')">✅ Достигнута</button>')+
+        '<button class="mini-btn danger" onclick="deleteGoal('+i+')">✖ Удалить</button>'+
+        '</div></div>';
+    }
+  }else{
+    h='<div class="empty-state"><div class="empty-state-icon">🎯</div>Нет целей. Поставь первую!</div>';
+  }
+  document.getElementById('goalsContainer').innerHTML=h;
+}
+
+function addGoal(){
+  var title=document.getElementById('goalTitle').value.trim();
+  var date=document.getElementById('goalDate').value;
+  if(!title||!date){showToast('Заполни название и дату',true);return;}
+  if(!state.goals)state.goals=[];
+  state.goals.push({title:title,deadline:date,created:dateKey(new Date()),completed:false});
+  save();
+  document.getElementById('goalTitle').value='';
+  document.getElementById('goalDate').value='';
+  render();showToast('🎯 Цель создана!');
+}
+
+function completeGoal(i){
+  if(!state.goals[i])return;
+  state.goals[i].completed=true;
+  state.goalsCompleted=(state.goalsCompleted||0)+1;
+  state.xp+=500;
+  showToast('🏆 Цель достигнута! +500 XP');
+  if(state.sound)achSound();
+  save();render();checkAchievements();
+}
+
+function deleteGoal(i){
+  if(!confirm('Удалить цель?'))return;
+  state.goals.splice(i,1);
+  save();render();
+}
+
+var MOODS=[
+  {e:'🔥',n:'Энергия'},{e:'😊',n:'Хорошо'},{e:'😐',n:'Норма'},{e:'😔',n:'Грусть'},
+  {e:'😰',n:'Тревога'},{e:'😤',n:'Злость'},{e:'😴',n:'Усталость'}
+];
+
+function renderMood(){
+  var c=document.getElementById('moodContainer');
+  var today=dateKey(new Date());
+  var currentMood=state.moods&&state.moods[today];
+  var h='<div class="section-title" style="margin-top:0;">Как ты сегодня?</div>';
+  h+='<div class="mood-row">';
+  for(var i=0;i<MOODS.length;i++){
+    h+='<div class="mood-btn '+(currentMood===MOODS[i].e?'selected':'')+'" onclick="setMood(\''+MOODS[i].e+'\')">'+MOODS[i].e+'</div>';
+  }
+  h+='</div>';
+  if(currentMood){
+    h+='<div style="text-align:center;color:var(--text-dim);font-size:13px;margin-bottom:14px;">Сегодня: '+currentMood+' '+(getMoodName(currentMood)||'')+'</div>';
+  }
+  var keys=Object.keys(state.moods||{}).sort().slice(-14);
+  if(keys.length){
+    h+='<div class="mood-history">';
+    for(var k=keys.length-1;k>=0;k--){
+      h+='<div class="mood-dot" title="'+keys[k]+'">'+(state.moods[keys[k]]||'')+'</div>';
+    }
+    h+='</div>';
+  }
+  c.innerHTML=h;
+}
+
+function getMoodName(e){
+  for(var i=0;i<MOODS.length;i++)if(MOODS[i].e===e)return MOODS[i].n;
+  return '';
+}
+
+function setMood(e){
+  if(!state.moods)state.moods={};
+  var today=dateKey(new Date());
+  if(state.moods[today]===e)delete state.moods[today];
+  else state.moods[today]=e;
+  save();render();
+  checkAchievements();
+}
+
+function renderHealth(){
+  var c=document.getElementById('healthContainer');
+  var h='';
+  for(var ci=0;ci<HEALTH_BASE.length;ci++){
+    var cat=HEALTH_BASE[ci];
+    var parts=cat.cat.split(' ');
+    var emoji=parts[0],name=parts.slice(1).join(' ');
+    h+='<div class="health-cat" id="hc-'+ci+'">'+
+      '<div class="health-header" onclick="toggleHealth('+ci+')">'+
+      '<div class="health-title"><div class="health-icon" style="background:linear-gradient(135deg,#8b7cff,#f093fb);">'+emoji+'</div><span>'+name+'</span></div>'+
+      '<span class="health-arrow">›</span></div>'+
+      '<div class="health-body">';
+    for(var ii=0;ii<cat.items.length;ii++){
+      var item=cat.items[ii];
+      h+='<div class="health-item">'+
+        '<div class="health-item-title">'+item.name+'</div>'+
+        '<div class="health-item-what">'+item.what+'</div>'+
+        '<div class="health-mechanism"><b>Как это работает</b>'+item.mechanism+'</div>'+
+        '<div class="health-steps"><b>Пошаговый план</b>';
+      for(var s=0;s<item.steps.length;s++)h+='<div class="health-step">'+item.steps[s]+'</div>';
+      h+='</div>'+(item.when?'<div class="health-when"><b>⏰ Сроки:</b> '+item.when+'</div>':'')+'</div>';
+    }
+    h+='</div></div>';
+  }
+  c.innerHTML=h;
+}
+
+function toggleHealth(i){var el=document.getElementById('hc-'+i);if(el)el.classList.toggle('open');}
+function filterHealth(q){
+  var query=q.toLowerCase().trim();
+  for(var ci=0;ci<HEALTH_BASE.length;ci++){
+    var el=document.getElementById('hc-'+ci);
+    if(!el)continue;
+    if(!query){el.style.display='';el.classList.remove('open');continue;}
+    var cat=HEALTH_BASE[ci],has=false;
+    for(var i=0;i<cat.items.length;i++){
+      var item=cat.items[i];
+      if(item.name.toLowerCase().indexOf(query)>=0)has=true;
+      else if(item.what.toLowerCase().indexOf(query)>=0)has=true;
+      else if(item.mechanism.toLowerCase().indexOf(query)>=0)has=true;
+      if(has)break;
+    }
+    el.style.display=has?'':'none';
+    if(has)el.classList.add('open');
+  }
+}
+
+function renderAskesis(){
+  var active=(state.askesis||[]).filter(function(a){return !a.completed&&!a.failed;});
+  var h='';
+  if(active.length){
+    for(var i=0;i<active.length;i++){
+      var a=active[i],days=a.days||[];
+      var prog=Math.min(100,days.length/a.targetDays*100);
+      var today=dateKey(new Date());
+      var marked=days.indexOf(today)>=0;
+      h+='<div class="askesis-card">'+
+        '<div class="askesis-head"><div class="askesis-name">'+a.name+'</div>'+
+        '<div class="askesis-days">'+days.length+' / '+a.targetDays+' · +'+a.xp+'</div></div>'+
+        '<div class="progress-bar"><div class="progress-fill" style="width:'+prog+'%"></div></div>'+
+        '<div class="askesis-actions">'+
+        '<button class="mini-btn '+(marked?'gold':'green')+'" onclick="markAskesisDay(\''+a.id+'\')">'+(marked?'✅ Отмечено':'✅ Отметить')+'</button>'+
+        '<button class="mini-btn danger" onclick="failAskesis(\''+a.id+'\')">✖ Провал</button>'+
+        '</div></div>';
+    }
+  }else h='<div class="empty-state"><div class="empty-state-icon">🔥</div>Нет активных аскез.</div>';
+  document.getElementById('askesisActive').innerHTML=h;
+
+  var usedIds=(state.askesis||[]).map(function(a){return a.id;});
+  var ah='';
+  for(var j=0;j<ASKESIS.length;j++){
+    var ask=ASKESIS[j];
+    if(usedIds.indexOf(ask.id)>=0)continue;
+    ah+='<div class="askesis-card">'+
+      '<div class="askesis-head"><div class="askesis-name">'+ask.name+'</div>'+
+      '<div class="askesis-days">'+ask.targetDays+' дн · +'+ask.xp+'</div></div>'+
+      '<button class="mini-btn purple" style="margin-top:8px;" onclick="startAskesis(\''+ask.id+'\')">▶ Начать</button></div>';
+  }
+  var fin=(state.askesis||[]).filter(function(a){return a.completed||a.failed;});
+  for(var k=0;k<fin.length;k++){
+    var f=fin[k];
+    ah+='<div class="askesis-card" style="opacity:0.55;">'+
+      '<div class="askesis-head"><div class="askesis-name">'+f.name+'</div>'+
+      '<div class="askesis-days">'+(f.completed?'✅ Завершено':'❌ Провалено')+'</div></div></div>';
+  }
+  document.getElementById('askesisAvailable').innerHTML=ah;
+}
+
+function renderKnowledge(){
+  var c=document.getElementById('knowledgeContainer');
+  var h='';
+  for(var ci=0;ci<KNOWLEDGE_BASE.length;ci++){
+    var cat=KNOWLEDGE_BASE[ci];
+    var parts=cat.cat.split(' ');
+    var emoji=parts[0],name=parts.slice(1).join(' ');
+    h+='<div class="health-cat" id="kc-'+ci+'">'+
+      '<div class="health-header" onclick="toggleKb('+ci+')">'+
+      '<div class="health-title"><div class="health-icon" style="background:linear-gradient(135deg,#4facfe,#8b7cff);">'+emoji+'</div><span>'+name+'</span></div>'+
+      '<span class="health-arrow">›</span></div>'+
+      '<div class="health-body">';
+    for(var ii=0;ii<cat.items.length;ii++){
+      var item=cat.items[ii];
+      h+='<div class="health-item">'+
+        '<div class="health-item-title">'+item.name+'</div>'+
+        '<div class="health-item-what">'+item.what+'</div>'+
+        '<div class="health-steps"><b>Что даёт</b>';
+      for(var b=0;b<item.benefits.length;b++)h+='<div class="health-step">'+item.benefits[b]+'</div>';
+      h+='</div><div class="health-mechanism"><b>Как делать</b>'+item.how+'</div>'+
+        (item.when?'<div class="health-when"><b>⏰ Когда:</b> '+item.when+'</div>':'')+'</div>';
+    }
+    h+='</div></div>';
+  }
+  c.innerHTML=h;
+}
+function toggleKb(i){var el=document.getElementById('kc-'+i);if(el)el.classList.toggle('open');}
+function filterKnowledge(q){
+  var query=q.toLowerCase().trim();
+  for(var ci=0;ci<KNOWLEDGE_BASE.length;ci++){
+    var el=document.getElementById('kc-'+ci);
+    if(!el)continue;
+    if(!query){el.style.display='';el.classList.remove('open');continue;}
+    var cat=KNOWLEDGE_BASE[ci],has=false;
+    for(var i=0;i<cat.items.length;i++){
+      var item=cat.items[i];
+      if(item.name.toLowerCase().indexOf(query)>=0)has=true;
+      else if(item.what.toLowerCase().indexOf(query)>=0)has=true;
+      else if(item.how.toLowerCase().indexOf(query)>=0)has=true;
+      else{for(var b=0;b<item.benefits.length;b++)if(item.benefits[b].toLowerCase().indexOf(query)>=0){has=true;break;}}
+      if(has)break;
+    }
+    el.style.display=has?'':'none';
+    if(has)el.classList.add('open');
+  }
+}
+
+function renderProgress(){
+  var days=[];
+  for(var i=13;i>=0;i--){var d=new Date(Date.now()-i*86400000);days.push({key:dateKey(d),label:d.getDate()});}
+  var maxXp=50;
+  for(var j=0;j<days.length;j++){var v=state.history[days[j].key]||0;if(v>maxXp)maxXp=v;}
+  var ch='';
+  for(var k=0;k<days.length;k++){
+    var val=state.history[days[k].key]||0;
+    var hh=(val/maxXp)*100;
+    ch+='<div class="bar-wrap"><div class="bar" style="height:'+hh+'%"></div><div class="bar-label">'+days[k].label+'</div></div>';
+  }
+  document.getElementById('chart').innerHTML=ch;
+
+  var now=new Date();
+  var year=now.getFullYear(),month=now.getMonth();
+  var firstDay=new Date(year,month,1);
+  var daysInMonth=new Date(year,month+1,0).getDate();
+  var offset=(firstDay.getDay()+6)%7;
+  var calH='';
+  for(var o=0;o<offset;o++)calH+='<div class="cal-day empty"></div>';
+  for(var dd=1;dd<=daysInMonth;dd++){
+    var key=year+'-'+String(month+1).padStart(2,'0')+'-'+String(dd).padStart(2,'0');
+    var has=(state.history[key]||0)>0;
+    var isToday=key===dateKey(new Date());
+    calH+='<div class="cal-day '+(has?'has':'')+' '+(isToday?'today':'')+'">'+dd+'</div>';
+  }
+  document.getElementById('calendar').innerHTML=calH;
+
+  document.getElementById('detailXp').textContent=state.xp;
+  document.getElementById('detailStreak').textContent=state.maxStreak;
+  document.getElementById('detailDone').textContent=state.totalDone;
+  document.getElementById('detailAch').textContent=state.achievements.length+' / '+ACHIEVEMENTS.length;
+  document.getElementById('detailBarriers').textContent=(state.barriersCleared||0)+' / '+BARRIERS.length;
+  document.getElementById('detailGoals').textContent=(state.goalsCompleted||0);
+  document.getElementById('detailCards').textContent=(state.cardsCompleted||0);
+}
+
+function renderAwards(){
+  var h='';
+  for(var i=0;i<ACHIEVEMENTS.length;i++){
+    var a=ACHIEVEMENTS[i];
+    var u=state.achievements.indexOf(a.id)>=0;
+    h+='<div class="ach '+(u?'unlocked':'')+'">'+
+      '<div class="ach-icon">'+a.icon+'</div>'+
+      '<div class="ach-name">'+a.name+'</div>'+
+      '<div class="ach-desc">'+a.desc+'</div></div>';
+  }
+  document.getElementById('achGrid').innerHTML=h;
+}
+
+function renderCustomList(){
+  var c=document.getElementById('customList');
+  if(!c)return;
+  if(!state.customPractices||!state.customPractices.length){c.innerHTML='';return;}
+  var h='';
+  for(var i=0;i<state.customPractices.length;i++){
+    var p=state.customPractices[i];
+    h+='<div class="setting"><span class="setting-label">'+p.icon+' '+p.name+'</span>'+
+      '<button class="mini-btn danger" style="flex:0;padding:6px 12px;" onclick="removeCustom(\''+p.id+'\')">✖</button></div>';
+  }
+  c.innerHTML=h;
+}
+
+function renderSettings(){
+  var themes=[
+    {id:'dark',name:'Тёмная',c1:'#05040f',c2:'#8b7cff'},
+    {id:'light',name:'Светлая',c1:'#f8f5ff',c2:'#8b7cff'},
+    {id:'cosmic',name:'Космос',c1:'#0a0514',c2:'#ff6ec7'},
+    {id:'zen',name:'Дзен',c1:'#0a1a14',c2:'#4ade80'}
+  ];
+  var th='';
+  for(var i=0;i<themes.length;i++){
+    var t=themes[i],sel=state.theme===t.id;
+    th+='<div style="aspect-ratio:1;border-radius:16px;cursor:pointer;border:2px solid '+(sel?'#8b7cff':'transparent')+';background:linear-gradient(135deg, '+t.c1+', '+t.c2+');display:flex;align-items:flex-end;justify-content:center;padding:8px;font-size:10.5px;font-weight:800;color:#fff;text-shadow:0 1px 6px rgba(0,0,0,0.7);'+(sel?'box-shadow:0 0 24px rgba(139,124,255,0.55);':'')+'" onclick="setTheme(\''+t.id+'\')">'+t.name+'</div>';
+  }
+  document.getElementById('themePicker').innerHTML=th;
+
+  var styles=[
+    {id:'mixed',name:'Микс'},{id:'koch',name:'Снежинки'},{id:'sierpinski',name:'Треугольники'},
+    {id:'pentagon',name:'Пятиугольники'},{id:'star',name:'Звёзды'},{id:'hex',name:'Шестиугольники'},
+    {id:'none',name:'Выкл'}
+  ];
+  var sh='';
+  for(var j=0;j<styles.length;j++){
+    var s=styles[j],sel2=state.fractalStyle===s.id;
+    sh+='<div style="text-align:center;font-size:12px;font-weight:800;padding:12px 8px;cursor:pointer;border-radius:14px;border:2px solid '+(sel2?'#8b7cff':'var(--glass-border)')+';background:'+(sel2?'rgba(139,124,255,0.22)':'var(--glass)')+';color:var(--text);" onclick="setFractalStyle(\''+s.id+'\')">'+s.name+'</div>';
+  }
+  document.getElementById('fractalPicker').innerHTML=sh;
+
+  var swS=document.getElementById('switchSound'),swN=document.getElementById('switchNotify');
+  if(swS)swS.classList.toggle('on',state.sound);
+  if(swN)swN.classList.toggle('on',state.notify);
+}
+
+function setTheme(t){state.theme=t;save();render();showToast('Тема: '+t);}
+function setFractalStyle(s){state.fractalStyle=s;currentFractalStyle=s;if(s==='none'&&ctx)ctx.clearRect(0,0,W,H);save();render();showToast(s==='none'?'Фракталы выключены':'Стиль изменён');}
+function toggleSound(){state.sound=!state.sound;save();render();}
+function toggleNotify(){state.notify=!state.notify;if(state.notify&&'Notification' in window)Notification.requestPermission();save();render();}
+
+function startAskesis(id){
+  var a=null;
+  for(var i=0;i<ASKESIS.length;i++)if(ASKESIS[i].id===id)a=ASKESIS[i];
+  if(!a)return;
+  if(!state.askesis)state.askesis=[];
+  state.askesis.push({id:a.id,name:a.name,targetDays:a.targetDays,xp:a.xp,days:[],completed:false,failed:false,startedAt:dateKey(new Date())});
+  save();render();showToast('Аскеза начата! 🔥');
+}
+
+function markAskesisDay(id){
+  var a=null;
+  for(var i=0;i<(state.askesis||[]).length;i++)if(state.askesis[i].id===id)a=state.askesis[i];
+  if(!a||a.completed||a.failed)return;
+  var today=dateKey(new Date());
+  if(a.days.indexOf(today)>=0){showToast('Уже отмечено');return;}
+  a.days.push(today);
+  if(a.days.length>=a.targetDays){
+    a.completed=true;state.xp+=a.xp;
+    showToast('🏆 Аскеза пройдена! +'+a.xp+' XP');
+    checkAchievements();checkPath();
+  }else showToast('День '+a.days.length+' / '+a.targetDays+' ✅');
+  save();render();
+}
+
+function failAskesis(id){
+  if(!confirm('Провалить аскезу?'))return;
+  var a=null;
+  for(var i=0;i<(state.askesis||[]).length;i++)if(state.askesis[i].id===id)a=state.askesis[i];
+  if(!a)return;
+  a.failed=true;save();render();
+}
+
+/* ДЫХАНИЕ */
+var breathInterval=null,breathPattern=null,breathId=null,breathXp=0;
+function openBreath(type,id,xp){
+  document.getElementById('breathModal').classList.add('active');
+  breathPattern=type;breathId=id;breathXp=xp;
+  var titles={'478':'Дыхание 4-7-8','box':'Квадратное','wim':'Вима Хофа','alt':'Нади Шодхана'};
+  document.getElementById('breathTitle').textContent=titles[type]||'Дыхание';
+  document.getElementById('breathCircle').textContent='Приготовься';
+  document.getElementById('breathCircle').className='breath-circle';
+  document.getElementById('breathPhase').textContent='Нажми «Начать»';
+  document.getElementById('breathBtn').textContent='Начать';
+  document.getElementById('breathBtn').onclick=startBreath;
+}
+function closeBreath(){if(breathInterval){clearInterval(breathInterval);breathInterval=null;}closeModal('breathModal');}
+function startBreath(){
+  if(breathInterval)clearInterval(breathInterval);
+  var circle=document.getElementById('breathCircle'),phase=document.getElementById('breathPhase'),btn=document.getElementById('breathBtn');
+  btn.textContent='Стоп';
+  btn.onclick=function(){if(breathInterval){clearInterval(breathInterval);breathInterval=null;}btn.textContent='Начать';btn.onclick=startBreath;};
+  var patterns={
+    '478':[['Вдох',4,'inhale'],['Задержка',7,''],['Выдох',8,'exhale']],
+    'box':[['Вдох',4,'inhale'],['Задержка',4,''],['Выдох',4,'exhale'],['Задержка',4,'']],
+    'wim':[['Вдох',2,'inhale'],['Выдох',2,'exhale']],
+    'alt':[['Вдох Л',4,'inhale'],['Задержка',4,''],['Выдох П',4,'exhale'],['Задержка',4,'']]
+  };
+  var cycles=patterns[breathPattern]||patterns['478'];
+  var step=0,secondsLeft=cycles[0][1],cycleCount=0;
+  var tick=function(){
+    var c=cycles[step];
+    circle.textContent=c[0]+' '+secondsLeft;
+    circle.className='breath-circle '+c[2];
+    phase.textContent='Цикл '+(cycleCount+1);
+    secondsLeft--;
+    if(secondsLeft<0){step++;if(step>=cycles.length){step=0;cycleCount++;}secondsLeft=cycles[step][1];}
+    if(cycleCount>=4&&state.todayDone.indexOf(breathId)<0){
+      state.todayDone.push(breathId);
+      completePractice(breathId,breathXp);
+      if(breathInterval){clearInterval(breathInterval);breathInterval=null;}
+      closeModal('breathModal');render();
+    }
+  };
+  tick();breathInterval=setInterval(tick,1000);
+}
+
+/* ЗВУКИ */
+var audioCtx;
+function beep(){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.connect(g);g.connect(audioCtx.destination);o.frequency.value=880;
+    g.gain.setValueAtTime(0.1,audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+0.15);
+    o.start();o.stop(audioCtx.currentTime+0.15);
+  }catch(e){}
+}
+function achSound(){
+  try{
+    audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+    var freqs=[523,659,784,1047];
+    for(var i=0;i<freqs.length;i++)(function(f,idx){
+      var o=audioCtx.createOscillator(),g=audioCtx.createGain();
+      o.connect(g);g.connect(audioCtx.destination);o.frequency.value=f;
+      var t=audioCtx.currentTime+idx*0.1;
+      g.gain.setValueAtTime(0.12,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.3);
+      o.start(t);o.stop(t+0.3);
+    })(freqs[i],i);
+  }catch(e){}
+}
+
+function showToast(text,isErr){
+  var t=document.getElementById('toast');
+  if(!t)return;
+  t.textContent=text;
+  if(isErr)t.classList.add('error');else t.classList.remove('error');
+  t.classList.add('show');
+  if(t._timeout)clearTimeout(t._timeout);
+  t._timeout=setTimeout(function(){t.classList.remove('show');},2000);
+}
+
+/* АВАТАР */
+var AVATARS=['🧘','🥷','🧙','⚔️','🐉','🦅','🐺','🦁','🔥','⚡','🌟','🌙','☯️','🌊','🏔','🛡','🦉','👑','💎','🎭','🗿','🕊','🐯','🌋','🐲','🦄','🦊','🐻','🐼','⚜️','🔮','👁️','✨','🕉️','☀️'];
+function openAvatarPicker(){
+  var h='';
+  for(var i=0;i<AVATARS.length;i++){
+    var a=AVATARS[i];
+    h+='<div class="av-option '+(a===state.avatar?'selected':'')+'" onclick="setAvatar(\''+a+'\')">'+a+'</div>';
+  }
+  document.getElementById('avatarPicker').innerHTML=h;
+  document.getElementById('avatarModal').classList.add('active');
+}
+function setAvatar(a){state.avatar=a;save();render();closeModal('avatarModal');}
+
+/* СВОЯ ПРАКТИКА */
+function addCustomPractice(){
+  var name=document.getElementById('newName').value.trim();
+  var cat=document.getElementById('newCat').value;
+  if(!name){showToast('Введите название',true);return;}
+  var icons={disc:'⚔️',breath:'🌬️',body:'💪',mind:'🧠',spirit:'✨',health:'💚'};
+  var bx=15;
+  if(!state.customPractices)state.customPractices=[];
+  state.customPractices.push({
+    id:'custom_'+Date.now(),cat:cat,icon:icons[cat],name:name,custom:true,
+    tiers:[
+      {name:'Начальный',xp:bx,lvl:0},{name:'Уверенный',xp:bx*2,lvl:1},
+      {name:'Продвинутый',xp:bx*3,lvl:2},{name:'Мастерский',xp:bx*5,lvl:4},
+      {name:'Легендарный',xp:bx*8,lvl:6}
+    ]
+  });
+  save();
+  document.getElementById('newName').value='';
+  render();showToast('Практика добавлена ✨');
+}
+function removeCustom(id){
+  if(!confirm('Удалить?'))return;
+  state.customPractices=state.customPractices.filter(function(p){return p.id!==id;});
+  save();render();
+}
+
+/* ЭКСПОРТ/ИМПОРТ */
+function exportData(){
+  var data=JSON.stringify(state,null,2);
+  var blob=new Blob([data],{type:'application/json'});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement('a');
+  a.href=url;a.download='put-'+dateKey(new Date())+'.json';a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(e){
+  var file=e.target.files[0];
+  if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var data=JSON.parse(ev.target.result);
+      if(!confirm('Заменить прогресс?'))return;
+      state=Object.assign({},DEFAULT_STATE,data);
+      save();render();showToast('Импортировано ✅');
+    }catch(err){showToast('Ошибка',true);}
+  };
+  reader.readAsText(file);
+}
+function resetAll(){
+  if(!confirm('Сбросить ВСЁ?'))return;
+  localStorage.removeItem(STORAGE);
+  location.reload();
+}
+
+/* TABS */
+document.querySelectorAll('.tab').forEach(function(t){
+  t.onclick=function(){
+    document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('active');});
+    document.querySelectorAll('.page').forEach(function(x){x.classList.remove('active');});
+    t.classList.add('active');
+    var pg=document.getElementById('page-'+t.dataset.page);
+    if(pg)pg.classList.add('active');
+    window.scrollTo({top:0,behavior:'smooth'});
+  };
+});
+
+/* СТАРТ */
+try{
+  currentFractalStyle=state.fractalStyle||'mixed';
+  render();
+  document.getElementById('appRoot').style.display='block';
+  document.getElementById('loading').classList.add('hidden');
+  setTimeout(animateFractals,100);
+}catch(err){
+  var l=document.getElementById('loading');
+  if(l)l.innerHTML='<div class="err">⚠️ Ошибка:<br>'+(err.message||'Unknown')+'<br><br>'+(err.stack||'').slice(0,200)+'</div>';
+}
+</script>
+</body>
+</html>
