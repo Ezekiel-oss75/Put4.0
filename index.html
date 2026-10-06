@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#05040f">
+<meta name="description" content="Путь 16 — приложение для саморазвития, трекинга привычек, эзотерики и природы">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='80' font-size='80'%3E🧘%3C/text%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="stylesheet" href="styles.css">
+<title>Путь 16 · Сотворцом</title>
+</head>
+<body>
+
+<!-- ============ ЗАГРУЗКА ============ -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Загрузка Пути 16...</div>
+</div>
+
+<!-- ============ ФОН ============ -->
+<canvas id="fractalCanvas"></canvas>
+<div id="bgOverlay"></div>
+<div id="seasonalOverlay"></div>
+
+<!-- ============ УВЕДОМЛЕНИЕ О БАТАРЕЕ ============ -->
+<div id="batterySaverNotice" style="display:none">
+  🔋 Режим экономии — фрактал отключён
+</div>
+
+<!-- ============ КНОПКА СТОП ГОЛОС ============ -->
+<button class="stop-voice-btn" id="stopVoiceBtn" onclick="stopVoiceMeditation()" aria-label="Остановить медитацию">
+  ⏹ ОСТАНОВИТЬ
+</button>
+
+<!-- ============ ГЛОБАЛЬНЫЙ ПОИСК ============ -->
+<div class="global-search-overlay" id="globalSearchOverlay" onclick="closeGlobalSearch(event)" role="dialog" aria-label="Поиск по приложению">
+  <div class="global-search-box" onclick="event.stopPropagation()">
+    <div class="global-search-input-row">
+      <input class="global-search-input" id="globalSearchInput" 
+             placeholder="🔍 Поиск по приложению..." 
+             oninput="debouncedSearch(this.value)" 
+             autocomplete="off"
+             aria-label="Строка поиска">
+      <button class="global-search-close" onclick="closeGlobalSearch()" aria-label="Закрыть поиск">✖</button>
+    </div>
+    <div class="global-search-results" id="globalSearchResults">
+      <div class="search-hint">Начни вводить — найду практики, знания, травы, блюда...</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============ ПРИЛОЖЕНИЕ ============ -->
+<div class="app" id="appRoot" style="display:none">
+
+<!-- ============ ШАПКА ============ -->
+<header class="header">
+  <div class="avatar-row">
+    <div class="avatar" id="avatar" onclick="openProfile()" ondblclick="quickProfile()" 
+         role="button" tabindex="0" aria-label="Профиль">🧘</div>
+    <div class="level-info">
+      <div class="level-badge" id="levelBadge">Ур. 1 · Новичок</div>
+      <div class="rank-title" id="rankTitle">Начало пути</div>
+    </div>
+    <button class="header-search-btn" onclick="openGlobalSearch()" aria-label="Открыть поиск">🔍</button>
+  </div>
+  <h1 id="mainTitle">Путь</h1>
+  <div class="xp-bar" role="progressbar" aria-label="Прогресс уровня">
+    <div class="xp-fill" id="xpFill"></div>
+  </div>
+  <div class="xp-text" id="xpText">0 / 150 XP</div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Стрик</div></div>
+    <div class="stat"><div class="stat-value" id="statToday">0</div><div class="stat-label">Сегодня</div></div>
+    <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Дней</div></div>
+    <div class="stat"><div class="stat-value" id="statRank">🌱</div><div class="stat-label">Ранг</div></div>
+  </div>
+</header>
+
+<div id="penaltyBanner"></div>
+<div id="smartNudgeBanner"></div>
+
+<!-- ============ ГЛАВНОЕ МЕНЮ ============ -->
+<nav class="main-menu" id="mainMenu" role="tablist">
+  <button class="main-menu-btn active" data-cat="game" onclick="switchCategory('game')" role="tab">🎮<span>Игра</span></button>
+  <button class="main-menu-btn" data-cat="develop" onclick="switchCategory('develop')" role="tab">🎯<span>Развитие</span></button>
+  <button class="main-menu-btn" data-cat="track" onclick="switchCategory('track')" role="tab">📊<span>Трекеры</span></button>
+  <button class="main-menu-btn" data-cat="esoterica" onclick="switchCategory('esoterica')" role="tab">🔮<span>Эзотерика</span></button>
+  <button class="main-menu-btn" data-cat="nature" onclick="switchCategory('nature')" role="tab">🌱<span>Природа</span></button>
+  <button class="main-menu-btn" data-cat="know" onclick="switchCategory('know')" role="tab">📚<span>Знания</span></button>
+  <button class="main-menu-btn" data-cat="more" onclick="switchCategory('more')" role="tab">⚙️<span>Ещё</span></button>
+</nav>
+
+<!-- ============ ПОДТАБЫ ============ -->
+<div class="sub-tabs" id="subTabs"></div>
+
+<main id="mainContent">
+
+<!-- ==================== КАТЕГОРИЯ: ИГРА ==================== -->
+<section class="category-pages active" id="cat-game">
+  <div class="page active" id="page-card">
+    <div class="section-title">🎴 Карта Судьбы</div>
+    <div class="info-text">Одна карта в день. Прими вызов — выполни — получи награду.</div>
+    <div id="cardContainer"></div>
+    <div class="section-title">🌅 Аффирмация дня</div>
+    <div id="affirmationContainer"></div>
+    <div class="section-title">🌿 Мантра дня</div>
+    <div id="mantraContainer"></div>
+    <div class="section-title">💭 Цитата дня</div>
+    <div id="quoteContainer"></div>
+  </div>
+  <div class="page" id="page-wheel">
+    <div class="section-title">🎡 Колесо Фортуны</div>
+    <div class="info-text">Раз в день — крути и получай награду.</div>
+    <div id="wheelContainer"></div>
+  </div>
+  <div class="page" id="page-cards">
+    <div class="section-title">🎴 Коллекция карточек</div>
+    <div class="info-text">Собирай карточки за достижения.</div>
+    <div id="collectionContainer"></div>
+  </div>
+  <div class="page" id="page-heatmap">
+    <div class="section-title">🔥 Тепловая карта года</div>
+    <div class="info-text">Каждая клетка — день. Смотри свой путь.</div>
+    <div id="heatmapContainer"></div>
+  </div>
+  <div class="page" id="page-forecast">
+    <div class="section-title">📈 Прогноз прогресса</div>
+    <div class="info-text">Куда ты придёшь при текущем темпе.</div>
+    <div id="forecastContainer"></div>
+  </div>
+  <div class="page" id="page-dailypath">
+    <div class="section-title">🗺️ Путь дня</div>
+    <div class="info-text">Маршрут на сегодня, синхронизированный с планом.</div>
+    <div id="dailyPathContainer"></div>
+  </div>
+  <div class="page" id="page-boss">
+    <div class="section-title">⚔️ Босс недели</div>
+    <div class="info-text">Практики и преграды наносят ему урон.</div>
+    <div id="bossContainer"></div>
+  </div>
+  <div class="page" id="page-pet">
+    <div class="section-title">🐉 Питомец</div>
+    <div class="info-text">Твой дух-хранитель по китайскому гороскопу.</div>
+    <div id="petContainer"></div>
+  </div>
+  <div class="page" id="page-petshop">
+    <div class="section-title">🏪 Магазин питомцев</div>
+    <div class="info-text">Купи других духов-хранителей за XP.</div>
+    <div id="petshopContainer"></div>
+  </div>
+  <div class="page" id="page-chest">
+    <div class="section-title">🎁 Сундук дня</div>
+    <div class="info-text">Раз в день — награда.</div>
+    <div id="chestContainer"></div>
+  </div>
+  <div class="page" id="page-domain">
+    <div class="section-title">🏰 Домен</div>
+    <div class="info-text">Строй здания за XP.</div>
+    <div id="domainContainer"></div>
+  </div>
+  <div class="page" id="page-weekly">
+    <div class="section-title">🎁 Награда недели</div>
+    <div class="info-text">7 дней подряд — большая награда.</div>
+    <div id="weeklyContainer"></div>
+  </div>
+  <div class="page" id="page-awards">
+    <div class="section-title">🏆 Достижения</div>
+    <div class="ach-grid" id="achGrid"></div>
+  </div>
+</section>
+
+<!-- ==================== КАТЕГОРИЯ: РАЗВИТИЕ ==================== -->
+<section class="category-pages" id="cat-develop">
+  <div class="page active" id="page-practices">
+    <div class="section-title">📋 Практики</div>
+    <div class="info-text">Кулдаун 9ч. Уровни за 5 выполнений. Макс 2 раза в день.</div>
+    <div id="practicesContainer"></div>
+  </div>
+  <div class="page" id="page-quests">
+    <div class="section-title">⚔️ Квесты дня</div>
+    <div class="quest-timer-bar">
+      <div>
+        <div class="course-timer-label">Обновятся через</div>
+        <div class="quest-timer-value" id="questTimer">00:00:00</div>
+      </div>
+      <div style="font-size:36px">⏱</div>
+    </div>
+    <div id="questsContainer"></div>
+  </div>
+  <div class="page" id="page-courses">
+    <div class="section-title">🎓 Курсы</div>
+    <div class="info-text">Программы с таймерами. 1 пропуск разрешён, 2-й = провал.</div>
+    <div id="coursesContainer"></div>
+  </div>
+  <div class="page" id="page-askesis">
+    <div class="section-title">🔥 Активные аскезы</div>
+    <div class="info-text">Отмечай до 23:59. Пропуск = провал.</div>
+    <div id="askesisActive"></div>
+    <div class="section-title">📜 Доступные</div>
+    <div id="askesisAvailable"></div>
+  </div>
+  <div class="page" id="page-barriers">
+    <div class="section-title">🚧 Преграды</div>
+    <div class="info-text">Каждая бьёт по своему боссу. Полное прохождение = победа.</div>
+    <div id="barriersContainer"></div>
+  </div>
+  <div class="page" id="page-path">
+    <div class="section-title">🌌 Путь Пробуждения</div>
+    <div class="info-text">7 ступеней трансформации.</div>
+    <div id="pathContainer"></div>
+  </div>
+</section>
+
+<!-- ==================== КАТЕГОРИЯ: ТРЕКЕРЫ ==================== -->
+<section class="category-pages" id="cat-track">
+  <div class="page active" id="page-habits">
+    <div class="section-title">📅 Трекер привычек</div>
+    <div class="info-text">14 дней. Tap — отметить.</div>
+    <div id="habitsContainer"></div>
+  </div>
+  <div class="page" id="page-mood">
+    <div class="section-title">😊 Дневник настроения</div>
+    <div class="info-text">Квадрат = день. Tap — детали.</div>
+    <div id="moodContainer"></div>
+    <div class="section-title">📊 Аналитика по месяцам</div>
+    <div id="moodAnalyticsContainer"></div>
+  </div>
+  <div class="page" id="page-body">
+    <div class="section-title">💪 Журнал тела</div>
+    <div class="info-text">Вес, тренировки, еда, рекомендации.</div>
+    <div class="body-tabs">
+      <button class="body-tab active" data-body-tab="weight" onclick="switchBodyTab('weight')">⚖️ Вес</button>
+      <button class="body-tab" data-body-tab="workout" onclick="switchBodyTab('workout')">🏋️ Тренировки</button>
+      <button class="body-tab" data-body-tab="food" onclick="switchBodyTab('food')">🍎 Еда</button>
+      <button class="body-tab" data-body-tab="tips" onclick="switchBodyTab('tips')">📚 Советы</button>
+    </div>
+    <div class="body-pane active" id="bodyPane-weight"><div id="bodyContainer"></div></div>
+    <div class="body-pane" id="bodyPane-workout"><div id="workoutContainer"></div></div>
+    <div class="body-pane" id="bodyPane-food"><div id="foodContainer"></div></div>
+    <div class="body-pane" id="bodyPane-tips"><div id="tipsContainer"></div></div>
+  </div>
+  <div class="page" id="page-finance">
+    <div class="section-title">💰 Финансы</div>
+    <div class="info-text">Стратегии сбережения, копилки, учёт.</div>
+    <div id="financeContainer"></div>
+  </div>
+  <div class="page" id="page-plan">
+    <div class="section-title">🧠 План дня</div>
+    <div class="info-text">Персональный распорядок.</div>
+    <div id="planContainer"></div>
+  </div>
+  <div class="page" id="page-goals">
+    <div class="section-title">🎯 Грандиозные цели</div>
+    <div class="info-text">С чек-листом шагов.</div>
+    <div id="goalsContainer"></div>
+    <div class="section-title">Создать цель</div>
+    <div id="goalForm"></div>
+  </div>
+</section>
+
+<!-- ==================== КАТЕГОРИЯ: ЭЗОТЕРИКА ==================== -->
+<section class="category-pages" id="cat-esoterica">
+  <div class="page active" id="page-horoscope">
+    <div class="section-title">✨ Гороскоп</div>
+    <div class="info-text">Три системы: западная, китайская, кельтская.</div>
+    <div id="horoscopeContainer"></div>
+  </div>
+  <div class="page" id="page-numerology">
+    <div class="section-title">🔢 Нумерология</div>
+    <div class="info-text">Числа судьбы, матрица Пифагора, циклы.</div>
+    <div id="numerologyContainer"></div>
+  </div>
+  <div class="page" id="page-moon">
+    <div class="section-title">🌙 Лунный календарь</div>
+    <div class="info-text">Фазы, влияние на дела, садоводство.</div>
+    <div id="moonContainer"></div>
+  </div>
+  <div class="page" id="page-runes">
+    <div class="section-title">ᚱ Руна дня</div>
+    <div class="info-text">Одна руна из 24 — совет на сегодня.</div>
+    <div id="runeContainer"></div>
+  </div>
+  <div class="page" id="page-stones">
+    <div class="section-title">💎 Камень дня</div>
+    <div class="info-text">Талисман по дате и планете.</div>
+    <div id="stoneContainer"></div>
+  </div>
+  <div class="page" id="page-ball">
+    <div class="section-title">🎱 Шар Да / Нет</div>
+    <div class="info-text">Задай вопрос — получи ответ.</div>
+    <div id="ballContainer"></div>
+  </div>
+  <div class="page" id="page-color">
+    <div class="section-title">🎨 Цвет дня</div>
+    <div class="info-text">Цвет по дню недели и планете.</div>
+    <div id="colorContainer"></div>
+  </div>
+</section>
+
+<!-- ==================== КАТЕГОРИЯ: ПРИРОДА ==================== -->
+<section class="category-pages" id="cat-nature">
+  <div class="page active" id="page-garden">
+    <div class="section-title">🌱 Сад</div>
+    <div class="info-text">Трекер посадок, лунный календарь, справочник культур.</div>
+    <div id="gardenContainer"></div>
+  </div>
+  <div class="page" id="page-bees">
+    <div class="section-title">🐝 Пасека</div>
+    <div class="info-text">Вывод матки, медосбор, медоносная база.</div>
+    <div id="beesContainer"></div>
+  </div>
+  <div class="page" id="page-mushrooms">
+    <div class="section-title">🍄 Грибница</div>
+    <div class="info-text">Трекер мицелия, условия, сроки, волны сбора.</div>
+    <div id="mushroomsContainer"></div>
+  </div>
+  <div class="page" id="page-herbs">
+    <div class="section-title">🌿 Травы</div>
+    <div class="info-text">Лекарственные травы: свойства и время сбора.</div>
+    <div id="herbsContainer"></div>
+  </div>
+</section>
+
+<!-- ==================== КАТЕГОРИЯ: ЗНАНИЯ ==================== -->
+<section class="category-pages" id="cat-know">
+  <div class="page active" id="page-books">
+    <div class="section-title">📖 Библиотека</div>
+    <div class="info-text">Краткие выжимки из книг.</div>
+    <div id="booksContainer"></div>
+  </div>
+  <div class="page" id="page-knowledge">
+    <div class="section-title">📖 База знаний</div>
+    <input class="kb-search" id="kbSearch" placeholder="🔍 Поиск..." oninput="debouncedFilter('knowledge', this.value)">
+    <div id="knowledgeContainer"></div>
+  </div>
+  <div class="page" id="page-health">
+    <div class="section-title">💚 Здоровье</div>
+    <input class="kb-search" id="healthSearch" placeholder="🔍 Поиск..." oninput="debouncedFilter('health', this.value)">
+    <div id="healthContainer"></div>
+  </div>
+  <div class="page" id="page-esoteric-kb">
+    <div class="section-title">🔮 База эзотерики</div>
+    <div class="info-text">50+ терминов с пояснениями.</div>
+    <input class="kb-search" id="esoKbSearch" placeholder="🔍 Поиск термина..." oninput="debouncedFilter('esoKb', this.value)">
+    <div id="esotericKbContainer"></div>
+  </div>
+</section>
+
+<!-- ==================== КАТЕГОРИЯ: ЕЩЁ ==================== -->
+<section class="category-pages" id="cat-more">
+  <div class="page active" id="page-profile"><div id="profileContainer"></div></div>
+  <div class="page" id="page-reflection">
+    <div class="section-title">💭 Рефлексия дня</div>
+    <div class="info-text">Вечерние вопросы для осознанности.</div>
+    <div id="reflectionContainer"></div>
+  </div>
+  <div class="page" id="page-wins">
+    <div class="section-title">🏆 Дневник побед</div>
+    <div class="info-text">Маленькие победы каждый день.</div>
+    <div id="winsContainer"></div>
+  </div>
+  <div class="page" id="page-gratitude">
+    <div class="section-title">🙏 Благодарность</div>
+    <div class="info-text">3 вещи, за которые благодарен.</div>
+    <div id="gratitudeContainer"></div>
+  </div>
+  <div class="page" id="page-balance">
+    <div class="section-title">⚖️ Колесо баланса</div>
+    <div class="info-text">Оцени 8 сфер жизни.</div>
+    <div id="balanceContainer"></div>
+  </div>
+  <div class="page" id="page-insights">
+    <div class="section-title">💡 Инсайты недели</div>
+    <div class="info-text">Наблюдения за прогресс.</div>
+    <div id="insightsContainer"></div>
+  </div>
+  <div class="page" id="page-analytics">
+    <div class="section-title">📊 Аналитика</div>
+    <div id="analyticsContainer"></div>
+  </div>
+  <div class="page" id="page-dna">
+    <div class="section-title">🧬 ДНК привычек</div>
+    <div class="info-text">90 дней пути.</div>
+    <div id="dnaWrap"></div>
+  </div>
+  <div class="page" id="page-progress">
+    <div class="section-title">📈 XP за 14 дней</div>
+    <div class="chart" id="chart"></div>
+    <div class="section-title">📅 Календарь</div>
+    <div class="cal" id="calendar"></div>
+    <div class="section-title">🎯 Детали</div>
+    <div class="setting"><span class="setting-label">💰 Баланс XP</span><b class="setting-value" id="detailXp">0</b></div>
+    <div class="setting"><span class="setting-label">🏆 Заработано всего</span><b class="setting-value" id="detailXpEarned">0</b></div>
+    <div class="setting"><span class="setting-label">Макс. стрик</span><b class="setting-value" id="detailStreak">0</b></div>
+    <div class="setting"><span class="setting-label">Практик</span><b class="setting-value" id="detailDone">0</b></div>
+    <div class="setting"><span class="setting-label">Достижений</span><b class="setting-value" id="detailAch">0</b></div>
+    <div class="setting"><span class="setting-label">Карточек</span><b class="setting-value" id="detailCards">0</b></div>
+    <div class="setting"><span class="setting-label">Боссов убито</span><b class="setting-value" id="detailBosses">0</b></div>
+    <div class="setting"><span class="setting-label">Питомцев</span><b class="setting-value" id="detailPets">0</b></div>
+    <div class="setting"><span class="setting-label">Посадок в саду</span><b class="setting-value" id="detailGarden">0</b></div>
+    <div class="setting"><span class="setting-label">Ульев</span><b class="setting-value" id="detailBees">0</b></div>
+    <div class="setting"><span class="setting-label">Грибниц</span><b class="setting-value" id="detailMushrooms">0</b></div>
+  </div>
+  <div class="page" id="page-settings">
+    <div class="section-title">🎨 Тема</div>
+    <div id="themePicker"></div>
+    <div class="section-title">🌸 Сезонная тема</div>
+    <div class="setting"><span class="setting-label">🌦 Авто-смена по сезону</span><div class="switch" id="switchSeasonal" onclick="toggleSeasonal()" role="switch"></div></div>
+    <div class="section-title">🌀 Фракталы</div>
+    <div id="fractalPicker"></div>
+    <div class="section-title">🎵 Целебные частоты</div>
+    <div class="sound-grid" id="frequencyPicker"></div>
+    <div class="section-title">🌿 Звуки природы</div>
+    <div class="sound-grid" id="soundPicker"></div>
+    <div class="section-title">⏱ Таймеры</div>
+    <button class="btn-block primary" onclick="openTimer('stopwatch')">⏱ Секундомер</button>
+    <button class="btn-block" onclick="openTimer('pomodoro')">🍅 Pomodoro 25/5</button>
+    <button class="btn-block" onclick="openTimer('custom')">⏰ Обратный отсчёт</button>
+    <div class="section-title">🧘 Голосовые медитации</div>
+    <button class="btn-block" onclick="startVoiceMeditation('relax')">🌊 Расслабление</button>
+    <button class="btn-block" onclick="startVoiceMeditation('focus')">🎯 Фокус</button>
+    <button class="btn-block" onclick="startVoiceMeditation('gratitude')">💗 Благодарность</button>
+    <div class="section-title">⚙️ Основные</div>
+    <div class="setting"><span class="setting-label">🔊 Звуки</span><div class="switch" id="switchSound" onclick="toggleSound()" role="switch"></div></div>
+    <div class="setting"><span class="setting-label">🔔 Напоминания</span><div class="switch" id="switchNotify" onclick="toggleNotify()" role="switch"></div></div>
+    <div class="setting"><span class="setting-label">💾 Экономия энергии</span><div class="switch" id="switchBattery" onclick="toggleBatterySaver()" role="switch"></div></div>
+    <div class="setting"><span class="setting-label">🎬 Уменьшить анимации</span><div class="switch" id="switchMotion" onclick="toggleReducedMotion()" role="switch"></div></div>
+    <div class="section-title">🌟 Свои аффирмации</div>
+    <div class="input-row">
+      <input id="newAffirmation" placeholder="Своя аффирмация" maxlength="100">
+      <button class="mini-btn purple" onclick="addCustomAffirmation()" aria-label="Добавить">➕</button>
+    </div>
+    <div id="customAffirmationsList"></div>
+    <div class="section-title">✏️ Своя практика</div>
+    <div class="input-row">
+      <input id="newName" placeholder="Название" maxlength="30">
+      <select id="newCat">
+        <option value="disc">Дисциплина</option>
+        <option value="breath">Дыхание</option>
+        <option value="body">Тело</option>
+        <option value="mind">Разум</option>
+        <option value="spirit">Дух</option>
+        <option value="health">Здоровье</option>
+      </select>
+    </div>
+    <button class="btn-block primary" onclick="addCustomPractice()">➕ Добавить</button>
+    <div id="customList"></div>
+    <div class="section-title">💾 Данные</div>
+    <button class="btn-block primary" onclick="exportData()">📤 Экспорт</button>
+    <button class="btn-block" onclick="document.getElementById('importFile').click()">📥 Импорт</button>
+    <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(event)">
+    <button class="btn-block" onclick="backupNow()">💾 Создать бэкап</button>
+    <button class="btn-block danger" onclick="resetAll()">🗑 Сбросить всё</button>
+    <div class="app-footer">
+      Путь 16 · v<span id="appVersion">1.0.0</span>
+    </div>
+  </div>
+</section>
+
+</main>
+
+</div><!-- /.app -->
+
+<!-- ==================== МОДАЛКИ ==================== -->
+
+<!-- Практика таймер -->
+<div class="modal" id="practiceTimerModal">
+  <div class="modal-content">
+    <h2 id="timerPracTitle">Практика</h2>
+    <div class="info-text" id="timerPracDesc" style="margin-bottom:16px">Выполни и подтверди</div>
+    <div class="timer-progress">
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <circle class="timer-progress-bg" cx="90" cy="90" r="80"></circle>
+        <circle class="timer-progress-fill" id="pracTimerCircle" cx="90" cy="90" r="80" stroke-dasharray="502" stroke-dashoffset="502"></circle>
+      </svg>
+      <div class="timer-progress-text" id="pracTimerText">0:00</div>
+      <div class="timer-progress-label" id="pracTimerLabel">Осталось</div>
+    </div>
+    <div class="info-text" id="pracTimerHint" style="margin-top:8px">⏱ Таймер идёт. Не закрывай окно.</div>
+    <div class="practice-timer-actions">
+      <button class="confirm-btn" id="pracConfirmBtn" onclick="confirmPracticeComplete()" disabled>✅ Подтвердить</button>
+    </div>
+    <button class="btn ghost" onclick="cancelPracticeTimer()" style="width:100%;margin-top:12px">Отмена</button>
+  </div>
+</div>
+
+<!-- Level up -->
+<div class="modal" id="levelUpModal">
+  <div class="modal-content" style="text-align:center">
+    <div style="font-size:80px;margin-bottom:16px;animation:levelUpBounce .8s ease-out">🎉</div>
+    <h2 style="margin-bottom:8px;font-size:26px;background:linear-gradient(90deg,#4facfe,#f093fb);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Уровень повышен!</h2>
+    <div id="levelUpTitle" style="font-size:16px;font-weight:800;margin-bottom:6px">Искатель</div>
+    <div id="levelUpRank" style="font-size:13px;color:var(--text-dim);font-weight:700;margin-bottom:20px;letter-spacing:1px">В поиске</div>
+    <div class="reward-box">
+      <div class="reward-label">🎁 Награда</div>
+      <div id="levelUpRewardText" class="reward-value">+100 XP</div>
+    </div>
+    <button class="btn primary" onclick="claimLevelUpReward()" style="width:100%">✨ Забрать награду</button>
+  </div>
+</div>
+
+<!-- Карточка -->
+<div class="modal" id="cardUnlockModal">
+  <div class="modal-content" style="text-align:center">
+    <div class="info-text" style="letter-spacing:2px;text-transform:uppercase">🎴 Новая карточка!</div>
+    <div id="cardUnlockIcon" style="font-size:100px;margin:20px 0">🐉</div>
+    <div id="cardUnlockName" style="font-size:22px;font-weight:900;margin-bottom:6px">Дракон</div>
+    <div id="cardUnlockDesc" class="info-text" style="margin-bottom:20px">Легендарный страж</div>
+    <button class="btn primary" onclick="closeCardUnlock()" style="width:100%">✨ Класс!</button>
+  </div>
+</div>
+
+<!-- Профиль -->
+<div class="modal" id="profileEditModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 style="margin-bottom:20px;text-align:center">✏️ Профиль</h2>
+    <div class="profile-form-row full"><div><div class="profile-form-label">Имя</div><input class="profile-form-input" id="pfName" placeholder="Как тебя зовут?" maxlength="30"></div></div>
+    <div class="profile-form-row full"><div><div class="profile-form-label">Дата рождения</div><input class="profile-form-input" type="date" id="pfBirth"></div></div>
+    <div class="profile-form-label">Пол</div>
+    <div class="gender-tabs">
+      <button class="gender-tab" data-gender="male" onclick="pickGender('male')">♂ Мужской</button>
+      <button class="gender-tab" data-gender="female" onclick="pickGender('female')">♀ Женский</button>
+    </div>
+    <div class="profile-form-row">
+      <div><div class="profile-form-label">Рост (см)</div><input class="profile-form-input" type="number" id="pfHeight" placeholder="175" min="100" max="250"></div>
+      <div><div class="profile-form-label">Вес (кг)</div><input class="profile-form-input" type="number" id="pfWeight" placeholder="70" min="30" max="300" step="0.1"></div>
+    </div>
+    <div class="profile-form-row full"><div><div class="profile-form-label">Целевой вес (кг)</div><input class="profile-form-input" type="number" id="pfTargetWeight" placeholder="65" min="30" max="300" step="0.1"></div></div>
+    <div class="profile-form-label">🎯 Цель</div>
+    <div class="goal-tabs">
+      <button class="goal-tab" data-goal="lose" onclick="pickGoal('lose')">🔥 Похудеть</button>
+      <button class="goal-tab" data-goal="gain" onclick="pickGoal('gain')">💪 Набрать</button>
+      <button class="goal-tab" data-goal="maintain" onclick="pickGoal('maintain')">⚖️ Держать</button>
+      <button class="goal-tab" data-goal="recomp" onclick="pickGoal('recomp')">✨ Рельеф</button>
+    </div>
+    <div class="profile-form-label">🏃 Активность</div>
+    <div class="activity-list">
+      <button class="activity-opt" data-activity="sedentary" onclick="pickActivity('sedentary')"><div class="activity-opt-icon">🪑</div><div class="activity-opt-info"><div class="activity-opt-name">Сидячий</div><div class="activity-opt-desc">Мало движения</div></div></button>
+      <button class="activity-opt" data-activity="light" onclick="pickActivity('light')"><div class="activity-opt-icon">🚶</div><div class="activity-opt-info"><div class="activity-opt-name">Лёгкий</div><div class="activity-opt-desc">1-2 тренировки</div></div></button>
+      <button class="activity-opt" data-activity="moderate" onclick="pickActivity('moderate')"><div class="activity-opt-icon">🏃</div><div class="activity-opt-info"><div class="activity-opt-name">Средний</div><div class="activity-opt-desc">3-5 тренировок</div></div></button>
+      <button class="activity-opt" data-activity="active" onclick="pickActivity('active')"><div class="activity-opt-icon">💪</div><div class="activity-opt-info"><div class="activity-opt-name">Высокий</div><div class="activity-opt-desc">6-7 тренировок</div></div></button>
+      <button class="activity-opt" data-activity="athlete" onclick="pickActivity('athlete')"><div class="activity-opt-icon">🏆</div><div class="activity-opt-info"><div class="activity-opt-name">Спортсмен</div><div class="activity-opt-desc">2 раза в день</div></div></button>
+    </div>
+    <div class="profile-form-row">
+      <div><div class="profile-form-label">💤 Сон (ч)</div><input class="profile-form-input" type="number" id="pfSleep" value="8" min="4" max="12"></div>
+      <div><div class="profile-form-label">💧 Вода (мл)</div><input class="profile-form-input" type="number" id="pfWater" value="2000" min="500" max="5000" step="100"></div>
+    </div>
+    <button class="profile-save-btn" onclick="saveProfile()">💾 Сохранить</button>
+    <button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeModal('profileEditModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Приёмы пищи -->
+<div class="modal" id="profileMealsModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 style="text-align:center;margin-bottom:20px">🍽 Приёмы пищи</h2>
+    <div class="plan-label">Сколько приёмов в день?</div>
+    <div class="meal-count-tabs" id="mealCountTabs">
+      <button data-count="2" onclick="pickMealCount(2)">2</button>
+      <button data-count="3" onclick="pickMealCount(3)">3</button>
+      <button data-count="4" onclick="pickMealCount(4)">4</button>
+      <button data-count="5" onclick="pickMealCount(5)">5</button>
+      <button data-count="6" onclick="pickMealCount(6)">6</button>
+    </div>
+    <div id="mealScheduleEditor" style="margin-top:20px"></div>
+    <button class="profile-save-btn" onclick="saveMealSchedule()">💾 Сохранить</button>
+    <button class="btn ghost" style="width:100%;margin-top:10px" onclick="closeModal('profileMealsModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Имя питомца -->
+<div class="modal" id="petNameModal">
+  <div class="modal-content">
+    <h2>✏️ Имя питомца</h2>
+    <div style="font-size:60px;margin:20px 0" id="petNameEmoji">🐉</div>
+    <input class="plan-input" id="petNewName" placeholder="Введи имя" maxlength="20" style="text-align:center;font-size:16px;font-weight:800">
+    <button class="btn primary" onclick="savePetName()">💾 Сохранить</button>
+    <button class="btn ghost" onclick="closeModal('petNameModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Инфо -->
+<div class="modal" id="infoModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 id="infoTitle" style="margin-bottom:14px">Инфо</h2>
+    <div id="infoBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('infoModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Дыхание -->
+<div class="modal" id="breathModal">
+  <div class="modal-content">
+    <h2 id="breathTitle">Дыхание</h2>
+    <div class="breath-circle" id="breathCircle">Приготовься</div>
+    <div id="breathPhase" style="opacity:.78;font-size:14.5px;font-weight:700">Нажми «Начать»</div>
+    <button class="btn" id="breathBtn">Начать</button>
+    <button class="btn ghost" onclick="closeBreath()">Закрыть</button>
+  </div>
+</div>
+
+<!-- Аватар -->
+<div class="modal" id="avatarModal">
+  <div class="modal-content">
+    <h2>Аватар</h2>
+    <div class="avatar-picker" id="avatarPicker"></div>
+    <button class="btn ghost" onclick="closeModal('avatarModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Таймер -->
+<div class="modal" id="timerModal">
+  <div class="modal-content">
+    <h2 id="timerTitle">Таймер</h2>
+    <div class="timer-display" id="timerDisplay">00:00</div>
+    <div id="timerHint" class="info-text"></div>
+    <button class="btn" id="timerBtn" onclick="toggleTimer()">Начать</button>
+    <button class="btn ghost" onclick="closeTimer()">Закрыть</button>
+  </div>
+</div>
+
+<!-- Голос -->
+<div class="modal" id="voiceModal">
+  <div class="modal-content">
+    <h2 id="voiceTitle">Медитация</h2>
+    <div style="font-size:60px;margin:20px 0">🧘</div>
+    <div id="voiceText" style="font-size:15px;line-height:1.7;color:var(--text-dim);font-weight:600;min-height:80px">Приготовься...</div>
+    <button class="btn" onclick="stopVoiceMeditation()" style="margin-top:20px">Остановить</button>
+  </div>
+</div>
+
+<!-- Книга -->
+<div class="modal" id="bookModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 id="bookTitle" style="margin-bottom:6px">Книга</h2>
+    <div id="bookAuthor" class="info-text" style="margin-bottom:20px"></div>
+    <div id="bookBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn" style="margin-top:20px;width:100%" onclick="markBookRead()">✅ Отметить прочитанной</button>
+    <button class="btn ghost" style="margin-top:8px;width:100%" onclick="closeModal('bookModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Детали дня -->
+<div class="modal" id="dayDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 id="dayDetailTitle">День</h2>
+    <div id="dayDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('dayDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Настроение месяц -->
+<div class="modal" id="moodDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 id="moodDetailTitle">Месяц</h2>
+    <div id="moodDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('moodDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Заметка настроения -->
+<div class="modal" id="moodNoteModal">
+  <div class="modal-content">
+    <h2 id="moodNoteTitle">📝 Заметка дня</h2>
+    <div id="moodNoteDay" class="info-text" style="margin-bottom:14px"></div>
+    <textarea class="mood-note-modal-textarea" id="moodNoteText" placeholder="Что было? Что чувствовал?" maxlength="500"></textarea>
+    <button class="btn" onclick="saveMoodNote()">💾 Сохранить</button>
+    <button class="btn ghost" onclick="closeModal('moodNoteModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Тренировка -->
+<div class="modal" id="workoutAddModal">
+  <div class="modal-content">
+    <h2>➕ Новая тренировка</h2>
+    <div class="plan-label">Название</div>
+    <input class="plan-input" id="wName" placeholder="Грудь+Трицепс" maxlength="40">
+    <div class="plan-label">Дата</div>
+    <input class="plan-input" type="date" id="wDate">
+    <button class="btn primary" onclick="createWorkout()">✅ Создать</button>
+    <button class="btn ghost" onclick="closeModal('workoutAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Упражнение -->
+<div class="modal" id="exerciseAddModal">
+  <div class="modal-content">
+    <h2>💪 Упражнение</h2>
+    <input class="plan-input" id="exName" placeholder="Жим лёжа" maxlength="30">
+    <input class="plan-input" type="number" id="exSets" placeholder="Подходы" value="3">
+    <input class="plan-input" type="number" id="exReps" placeholder="Повторения" value="10">
+    <input class="plan-input" type="number" id="exWeight" placeholder="Вес (кг)" value="0">
+    <button class="btn primary" onclick="addExercise()">✅ Добавить</button>
+    <button class="btn ghost" onclick="closeModal('exerciseAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Еда -->
+<div class="modal" id="foodAddModal">
+  <div class="modal-content">
+    <h2>🍎 Еда</h2>
+    <input class="plan-input" id="fName" placeholder="Овсянка с ягодами" maxlength="50">
+    <input class="plan-input" type="number" id="fProtein" placeholder="Белки (г)" value="0">
+    <input class="plan-input" type="number" id="fFat" placeholder="Жиры (г)" value="0">
+    <input class="plan-input" type="number" id="fCarbs" placeholder="Углеводы (г)" value="0">
+    <input class="plan-input" type="number" id="fCalories" placeholder="Калории" value="0">
+    <button class="btn primary" onclick="addFood()">✅ Добавить</button>
+    <button class="btn ghost" onclick="closeModal('foodAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- База блюд -->
+<div class="modal" id="foodLibraryModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 style="margin:0">🍳 База блюд</h2>
+      <button class="btn-small danger" onclick="closeModal('foodLibraryModal')">✖</button>
+    </div>
+    <div class="scroll-x" id="foodCategoriesRow"></div>
+    <input class="plan-input" id="foodSearchInput" placeholder="🔍 Поиск по названию" oninput="debouncedFilter('foodLib', this.value)" style="margin-bottom:14px">
+    <div id="foodLibraryList" class="modal-scroll"></div>
+    <button class="btn ghost" style="width:100%;margin-top:14px" onclick="closeModal('foodLibraryModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Конструктор дня -->
+<div class="modal" id="dayConstructorModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 style="margin:0">🍽 Составить день</h2>
+      <button class="btn-small danger" onclick="closeModal('dayConstructorModal')">✖</button>
+    </div>
+    <div class="info-text" style="margin-bottom:16px">Выбирай блюда — видишь, как набираешь норму</div>
+    <div id="dayConstructorSummary" class="day-summary"></div>
+    <div id="dayConstructorList"></div>
+    <button class="btn primary" style="width:100%;margin-top:14px" onclick="saveDayConstructor()">💾 Сохранить день</button>
+    <button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeModal('dayConstructorModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Копилка -->
+<div class="modal" id="savingsAddModal">
+  <div class="modal-content">
+    <h2>🏦 Новая копилка</h2>
+    <div class="plan-label">Название</div>
+    <input class="plan-input" id="savName" placeholder="На отпуск" maxlength="30">
+    <div class="plan-label">Цель (₽)</div>
+    <input class="plan-input" type="number" id="savTarget" placeholder="50000">
+    <div class="plan-label">Уже накоплено (₽)</div>
+    <input class="plan-input" type="number" id="savCurrent" placeholder="0" value="0">
+    <button class="btn primary" onclick="createSavings()">✅ Создать</button>
+    <button class="btn ghost" onclick="closeModal('savingsAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Стратегии -->
+<div class="modal" id="strategyModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 style="margin:0">💰 Выбор стратегии</h2>
+      <button class="btn-small danger" onclick="closeModal('strategyModal')">✖</button>
+    </div>
+    <div class="info-text" style="margin-bottom:16px">Выбери стратегию — приложение рассчитает, сколько откладывать.</div>
+    <div id="strategyList"></div>
+    <button class="btn ghost" style="width:100%;margin-top:14px" onclick="closeModal('strategyModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Баланс -->
+<div class="modal" id="balanceEditModal">
+  <div class="modal-content" style="text-align:left">
+    <h2 style="margin-bottom:16px">⚖️ Оценка сфер</h2>
+    <div id="balanceEditList"></div>
+    <button class="btn primary" style="width:100%;margin-top:14px" onclick="saveBalance()">💾 Сохранить</button>
+    <button class="btn ghost" style="width:100%;margin-top:8px" onclick="closeModal('balanceEditModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Эзотерика: гороскоп -->
+<div class="modal" id="horoscopeDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="horoscopeDetailTitle" style="margin:0">Гороскоп</h2>
+      <button class="btn-small danger" onclick="closeModal('horoscopeDetailModal')">✖</button>
+    </div>
+    <div id="horoscopeDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('horoscopeDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Эзотерика: нумерология -->
+<div class="modal" id="numerologyDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="numerologyDetailTitle" style="margin:0">Число</h2>
+      <button class="btn-small danger" onclick="closeModal('numerologyDetailModal')">✖</button>
+    </div>
+    <div id="numerologyDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('numerologyDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Эзотерика: руна -->
+<div class="modal" id="runeDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="runeDetailTitle" style="margin:0">Руна дня</h2>
+      <button class="btn-small danger" onclick="closeModal('runeDetailModal')">✖</button>
+    </div>
+    <div id="runeDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('runeDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Эзотерика: камень -->
+<div class="modal" id="stoneDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="stoneDetailTitle" style="margin:0">Камень дня</h2>
+      <button class="btn-small danger" onclick="closeModal('stoneDetailModal')">✖</button>
+    </div>
+    <div id="stoneDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('stoneDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Эзотерика: луна -->
+<div class="modal" id="moonDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="moonDetailTitle" style="margin:0">Луна</h2>
+      <button class="btn-small danger" onclick="closeModal('moonDetailModal')">✖</button>
+    </div>
+    <div id="moonDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('moonDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Сад: добавить -->
+<div class="modal" id="gardenAddModal">
+  <div class="modal-content">
+    <h2>🌱 Новая посадка</h2>
+    <div class="plan-label">Культура</div>
+    <select class="plan-input" id="gardenCultureSelect"></select>
+    <div class="plan-label">Дата посадки</div>
+    <input class="plan-input" type="date" id="gardenPlantDate">
+    <div class="plan-label">Заметка</div>
+    <input class="plan-input" id="gardenNote" placeholder="Место, сорт" maxlength="60">
+    <button class="btn primary" onclick="addGardenPlant()">✅ Посадить</button>
+    <button class="btn ghost" onclick="closeModal('gardenAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Сад: культура -->
+<div class="modal" id="gardenCultureModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="gardenCultureTitle" style="margin:0">Культура</h2>
+      <button class="btn-small danger" onclick="closeModal('gardenCultureModal')">✖</button>
+    </div>
+    <div id="gardenCultureBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('gardenCultureModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Улей -->
+<div class="modal" id="hiveAddModal">
+  <div class="modal-content">
+    <h2>🐝 Новый улей</h2>
+    <div class="plan-label">Название / номер</div>
+    <input class="plan-input" id="hiveName" placeholder="Улей №1" maxlength="30">
+    <div class="plan-label">Дата установки</div>
+    <input class="plan-input" type="date" id="hiveDate">
+    <div class="plan-label">Порода пчёл</div>
+    <select class="plan-input" id="hiveBreedSelect"></select>
+    <button class="btn primary" onclick="addHive()">✅ Создать</button>
+    <button class="btn ghost" onclick="closeModal('hiveAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Матка -->
+<div class="modal" id="queenTimelineModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="queenTimelineTitle" style="margin:0">👑 Вывод матки</h2>
+      <button class="btn-small danger" onclick="closeModal('queenTimelineModal')">✖</button>
+    </div>
+    <div id="queenTimelineBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('queenTimelineModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Медоносы -->
+<div class="modal" id="honeyBaseModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 style="margin:0">🌼 Медоносная база</h2>
+      <button class="btn-small danger" onclick="closeModal('honeyBaseModal')">✖</button>
+    </div>
+    <input class="plan-input" id="honeyBaseSearch" placeholder="🔍 Поиск по названию" oninput="debouncedFilter('honeyBase', this.value)" style="margin-bottom:14px">
+    <div id="honeyBaseList" class="modal-scroll-lg"></div>
+    <button class="btn ghost" style="width:100%;margin-top:14px" onclick="closeModal('honeyBaseModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Грибница -->
+<div class="modal" id="mushroomAddModal">
+  <div class="modal-content">
+    <h2>🍄 Новая грибница</h2>
+    <div class="plan-label">Вид гриба</div>
+    <select class="plan-input" id="mushroomSpeciesSelect"></select>
+    <div class="plan-label">Субстрат</div>
+    <select class="plan-input" id="mushroomSubstrateSelect">
+      <option value="sawdust">Опилки</option>
+      <option value="straw">Солома</option>
+      <option value="coffee">Кофейная гуща</option>
+      <option value="logs">Поленья</option>
+      <option value="soil">Почва</option>
+    </select>
+    <div class="plan-label">Дата закладки</div>
+    <input class="plan-input" type="date" id="mushroomDate">
+    <div class="plan-label">Вес субстрата (кг)</div>
+    <input class="plan-input" type="number" id="mushroomWeight" placeholder="5" value="5">
+    <button class="btn primary" onclick="addMushroomBatch()">✅ Создать</button>
+    <button class="btn ghost" onclick="closeModal('mushroomAddModal')">Отмена</button>
+  </div>
+</div>
+
+<!-- Гриб -->
+<div class="modal" id="mushroomSpeciesModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="mushroomSpeciesTitle" style="margin:0">Гриб</h2>
+      <button class="btn-small danger" onclick="closeModal('mushroomSpeciesModal')">✖</button>
+    </div>
+    <div id="mushroomSpeciesBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('mushroomSpeciesModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Трава -->
+<div class="modal" id="herbDetailModal">
+  <div class="modal-content" style="text-align:left">
+    <div class="modal-header">
+      <h2 id="herbDetailTitle" style="margin:0">Трава</h2>
+      <button class="btn-small danger" onclick="closeModal('herbDetailModal')">✖</button>
+    </div>
+    <div id="herbDetailBody" style="font-size:13.5px;line-height:1.7;color:var(--text-dim)"></div>
+    <button class="btn ghost" style="margin-top:20px;width:100%" onclick="closeModal('herbDetailModal')">Закрыть</button>
+  </div>
+</div>
+
+<!-- Попап сундука -->
+<div class="chest-popup" id="chestPopup">
+  <div class="chest-icon-big" id="chestIcon">📦</div>
+  <div class="chest-name-big" id="chestName">Сундук</div>
+  <div class="chest-xp" id="chestXP">+0 XP</div>
+  <div class="chest-rarity rarity-common" id="chestRarity">COMMON</div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- Попап достижения -->
+<div class="ach-popup" id="achPopup">
+  <div class="ach-popup-icon" id="achPopupIcon">🏆</div>
+  <div class="ach-popup-text">
+    <div class="ach-popup-title">Достижение</div>
+    <div class="ach-popup-name" id="achPopupName">—</div>
+  </div>
+</div>
+
+<!-- ============ СКРИПТЫ ============ -->
+<!-- Порядок важен! -->
+<script src="app-part1-data.js"></script>
+<script src="app-part2-core.js"></script>
+<script src="app-part3-game.js"></script>
+<script src="app-part4-develop.js"></script>
+<script src="app-part5-track.js"></script>
+<script src="app-part6-esoteric.js"></script>
+<script src="app-part7-nature.js"></script>
+<script src="app-part8-knowledge.js"></script>
+<script src="app-part9-more.js"></script>
+<script src="app-part10-init.js"></script>
+
+</body>
+</html>
