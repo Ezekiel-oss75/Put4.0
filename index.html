@@ -1,0 +1,2695 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="theme-color" content="#05040f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Путь 16</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#05040f;color:#f0f0f7;font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;min-height:100vh;min-height:100dvh;line-height:1.5;padding-bottom:90px;overflow-x:hidden}
+#loading{position:fixed;inset:0;background:#05040f;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;z-index:9999;transition:opacity .4s}
+.spinner{width:50px;height:50px;border:3px solid rgba(255,255,255,.1);border-top-color:#4facfe;border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#loading p{font-size:13px;color:#6e6e88;font-weight:700;letter-spacing:1px}
+.hidden{display:none!important}
+.header{padding:14px 16px;padding-top:calc(14px + env(safe-area-inset-top,0px));background:linear-gradient(180deg,#0b0a1a 0%,rgba(11,10,26,.5) 80%,transparent 100%);position:sticky;top:0;z-index:10}
+.header-top{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#4facfe,#b06bff);display:flex;align-items:center;justify-content:center;font-size:21px;flex-shrink:0;cursor:pointer}
+.level-info{flex:1;min-width:0}
+.level-badge{font-size:13px;font-weight:800}
+.rank-title{font-size:10px;font-weight:700;color:#6e6e88;text-transform:uppercase;letter-spacing:1px}
+.search-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);font-size:16px;color:#f0f0f7;cursor:pointer}
+.xp-bar{height:6px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin-bottom:4px}
+.xp-fill{height:100%;background:linear-gradient(90deg,#4facfe,#b06bff);border-radius:999px;transition:width .4s;width:0%}
+.xp-text{font-size:10px;color:#6e6e88;font-weight:700;text-align:right}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.stat{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:8px 3px;text-align:center}
+.stat-value{font-size:16px;font-weight:900}
+.stat-label{font-size:9px;color:#6e6e88;text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+.main{padding:14px}
+.page{display:none}
+.page.active{display:block;animation:pageIn .25s ease}
+@keyframes pageIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-size:16px;font-weight:900;margin:18px 0 10px}
+.section-title:first-child{margin-top:0}
+.info-text{font-size:12px;color:#6e6e88;font-weight:600;margin-bottom:12px;line-height:1.5}
+.card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:16px;padding:16px;margin-bottom:12px}
+.card.primary{background:linear-gradient(135deg,rgba(79,172,254,.15),rgba(176,107,255,.1));border-color:rgba(79,172,254,.35)}
+.btn{display:block;width:100%;padding:14px;background:linear-gradient(135deg,#4facfe,#b06bff);color:#fff;border:none;border-radius:14px;font-size:14px;font-weight:800;cursor:pointer;margin-bottom:8px;font-family:inherit}
+.btn:active{transform:scale(.98)}
+.btn.ghost{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#f0f0f7}
+.btn.danger{background:rgba(255,59,92,.15);border:1px solid rgba(255,59,92,.4);color:#ff3b5c}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.small{padding:8px 14px;width:auto;font-size:12px;border-radius:10px;display:inline-block;margin:0}
+.menu{position:fixed;bottom:0;left:0;right:0;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:6px 4px;padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));background:rgba(11,10,26,.97);border-top:1px solid rgba(255,255,255,.08);z-index:100;backdrop-filter:blur(10px)}
+.menu-btn{background:none;border:none;color:#6e6e88;font-size:18px;padding:6px 2px;border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:1px;cursor:pointer;font-family:inherit}
+.menu-btn.active{color:#f0f0f7;background:linear-gradient(135deg,rgba(79,172,254,.2),rgba(176,107,255,.15))}
+.menu-btn span{font-size:8px;font-weight:800;text-transform:uppercase}
+.toast{position:fixed;left:50%;bottom:110px;transform:translateX(-50%) translateY(20px);background:rgba(20,20,35,.96);border:1px solid rgba(255,255,255,.1);color:#fff;padding:12px 20px;border-radius:999px;font-size:13px;font-weight:800;z-index:200;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;max-width:calc(100vw - 40px);overflow:hidden;text-overflow:ellipsis}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.pbar{height:8px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;margin:8px 0}
+.pbar-fill{height:100%;background:linear-gradient(90deg,#4facfe,#b06bff);border-radius:999px;transition:width .3s}
+.item{display:flex;gap:12px;align-items:center;padding:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:16px;margin-bottom:10px}
+.item-icon{font-size:30px;flex-shrink:0}
+.item-body{flex:1;min-width:0}
+.item-title{font-size:14px;font-weight:800;margin-bottom:2px}
+.item-desc{font-size:11px;color:#a8a8bd;font-weight:600}
+.item-xp{font-size:11px;color:#4cd964;font-weight:800;margin-top:4px}
+.item-btn{padding:8px 14px;border-radius:10px;background:rgba(176,107,255,.2);border:1px solid rgba(176,107,255,.4);color:#b06bff;font-weight:800;font-size:12px;cursor:pointer;font-family:inherit;flex-shrink:0}
+.item-btn.done{background:rgba(76,217,100,.2);border-color:rgba(76,217,100,.4);color:#4cd964}
+.big-number{font-size:56px;font-weight:900;text-align:center;background:linear-gradient(90deg,#4facfe,#b06bff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin:14px 0}
+.grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.theme-opt{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.08);border-radius:14px;padding:10px 4px;text-align:center;font-size:10px;font-weight:800;cursor:pointer;color:#f0f0f7;font-family:inherit}
+.theme-opt.active{border-color:#4facfe;background:rgba(79,172,254,.12)}
+.theme-opt .ico{font-size:22px;display:block;margin-bottom:4px}
+input,textarea,select{width:100%;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);color:#f0f0f7;font-size:14px;font-weight:600;outline:none;font-family:inherit;margin-bottom:10px}
+input::placeholder{color:#6e6e88}
+.kb-search{margin-bottom:12px}
+.modal{position:fixed;inset:0;z-index:2000;background:rgba(5,4,15,.85);display:none;align-items:flex-end;justify-content:center;overflow-y:auto;backdrop-filter:blur(8px)}
+.modal.show{display:flex}
+.modal-content{background:linear-gradient(180deg,#121028,#0b0a1a);border:1px solid rgba(255,255,255,.08);border-radius:24px 24px 0 0;padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));width:100%;max-width:600px;max-height:92vh;overflow-y:auto}
+.modal-content h2{font-size:20px;font-weight:900;margin-bottom:14px}
+.ach-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px}
+.ach-item{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 6px;text-align:center}
+.ach-item.locked{opacity:.35}
+.ach-item.unlocked{border-color:rgba(255,209,102,.5)}
+.ach-item-icon{font-size:26px;margin-bottom:4px}
+.ach-item-name{font-size:10px;font-weight:800;line-height:1.3}
+.tag{display:inline-block;font-size:10px;font-weight:800;padding:4px 10px;border-radius:999px;margin:2px 3px 0 0}
+.tag.blue{background:rgba(79,172,254,.15);color:#4facfe}
+.tag.purple{background:rgba(176,107,255,.15);color:#b06bff}
+.tag.green{background:rgba(76,217,100,.15);color:#4cd964}
+.tag.gold{background:rgba(255,209,102,.15);color:#ffd166}
+.tag.red{background:rgba(255,59,92,.15);color:#ff3b5c}
+</style>
+</head>
+<body>
+
+<div id="loading"><div class="spinner"></div><p>Загрузка Пути 16...</p></div>
+
+<div class="header">
+  <div class="header-top">
+    <div class="avatar" id="avatar" onclick="openProfile()">🌱</div>
+    <div class="level-info">
+      <div class="level-badge" id="levelBadge">Ур. 1 · Новичок</div>
+      <div class="rank-title" id="rankTitle">Росток</div>
+    </div>
+    <button class="search-btn" onclick="openSearch()">🔍</button>
+  </div>
+  <div class="xp-bar"><div class="xp-fill" id="xpFill"></div></div>
+  <div class="xp-text" id="xpText">0 / 150 XP</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-value" id="statXp">0</div><div class="stat-label">XP</div></div>
+    <div class="stat"><div class="stat-value" id="statLevel">1</div><div class="stat-label">Уровень</div></div>
+    <div class="stat"><div class="stat-value" id="statPrac">0</div><div class="stat-label">Практик</div></div>
+    <div class="stat"><div class="stat-value" id="statStreak">0</div><div class="stat-label">Стрик</div></div>
+  </div>
+</div>
+
+<div class="main">
+
+<!-- ИГРА -->
+<div class="page active" id="page-game">
+  <div class="section-title">🎴 Карта дня</div>
+  <div class="card primary" style="text-align:center">
+    <div id="fateIcon" style="font-size:76px;margin:6px 0">☀️</div>
+    <div id="fateName" style="font-size:22px;font-weight:900;margin-bottom:6px">Солнце</div>
+    <div id="fateTask" style="font-size:13px;color:#a8a8bd;font-weight:600;margin-bottom:14px">—</div>
+    <button class="btn" id="fateBtn" onclick="completeFate()">✅ Выполнил</button>
+  </div>
+  <div class="section-title">🌅 Аффирмация</div>
+  <div class="card" style="text-align:center"><div id="affirm" style="font-size:14px;font-weight:800;font-style:italic">«—»</div></div>
+  <div class="section-title">💭 Цитата</div>
+  <div class="card"><div id="quoteText" style="font-size:13px;font-style:italic;font-weight:600;margin-bottom:6px">—</div><div id="quoteAuth" style="font-size:11px;color:#6e6e88;text-align:right;font-weight:800">—</div></div>
+  <div class="section-title">🎡 Колесо Фортуны</div>
+  <div class="card primary" style="text-align:center">
+    <div id="wheelPrize" style="font-size:28px;font-weight:900;margin:10px 0;color:#4facfe">?</div>
+    <button class="btn" id="wheelBtn" onclick="spinWheel()">🎡 Крутить</button>
+  </div>
+  <div class="section-title">🎁 Сундук дня</div>
+  <div class="card primary" style="text-align:center">
+    <div id="chestIcon" style="font-size:70px;margin:10px 0">📦</div>
+    <div id="chestState" style="font-size:13px;color:#a8a8bd;font-weight:600;margin-bottom:14px">Открой раз в день</div>
+    <button class="btn" id="chestBtn" onclick="openChest()">📦 Открыть</button>
+  </div>
+  <div class="section-title">⚔️ Босс недели</div>
+  <div class="card" style="text-align:center">
+    <div id="bossIcon" style="font-size:70px;margin:6px 0">🛋️</div>
+    <div id="bossName" style="font-size:18px;font-weight:900;margin-bottom:6px">—</div>
+    <div id="bossDesc" style="font-size:12px;color:#a8a8bd;font-weight:600;margin-bottom:12px">—</div>
+    <div class="pbar"><div class="pbar-fill" id="bossHpFill" style="width:100%;background:linear-gradient(90deg,#ff3b5c,#ff6b35)"></div></div>
+    <div id="bossHpText" style="font-size:12px;color:#6e6e88;font-weight:800">—</div>
+  </div>
+  <div class="section-title">🐉 Питомец</div>
+  <div class="card primary" style="text-align:center">
+    <div id="petIcon" style="font-size:90px;margin:6px 0">🐀</div>
+    <div id="petName" style="font-size:20px;font-weight:900;margin-bottom:4px">Крыса</div>
+    <div id="petBonus" style="font-size:12px;color:#4cd964;font-weight:800;margin-bottom:12px">+5% XP</div>
+    <button class="btn ghost" onclick="openPetShop()">🏪 Магазин питомцев</button>
+  </div>
+  <div class="section-title">🏰 Домен</div>
+  <div id="domainList"></div>
+  <div class="section-title">🏆 Достижения</div>
+  <div class="ach-grid" id="achList"></div>
+  <div class="section-title">🎴 Коллекция карточек</div>
+  <div id="cardsList"></div>
+</div>
+
+<!-- РАЗВИТИЕ -->
+<div class="page" id="page-develop">
+  <div class="section-title">📋 Практики</div>
+  <div class="info-text">Кулдаун 9ч · Максимум 2 в день · Уровни за 5 выполнений</div>
+  <div id="practList"></div>
+  <div class="section-title">⚔️ Квесты дня</div>
+  <div id="questsList"></div>
+  <div class="section-title">🎓 Курсы</div>
+  <div id="coursesList"></div>
+  <div class="section-title">🔥 Аскезы</div>
+  <div id="askesisList"></div>
+  <div class="section-title">🚧 Преграды</div>
+  <div id="barriersList"></div>
+  <div class="section-title">🌌 Путь Пробуждения</div>
+  <div id="pathBox"></div>
+</div>
+
+<!-- ТРЕКЕРЫ -->
+<div class="page" id="page-track">
+  <div class="section-title">📅 Привычки</div>
+  <div id="habitsList"></div>
+  <div class="section-title">😊 Настроение</div>
+  <div id="moodCalendar"></divName>
+  <div class="section-title"">⚖️ Вес</div>
+  <div id="weightBox"></div>
+  <div class="section-title">💰 Финансы</div>
+  <div id="financeBox"></div>
+  <div class="section-title">🎯 Цели</div>
+  <div id="goalsBox"></div>
+  <div class="section-title">➕ Новая цель</div>
+  <div class="card">
+    <input id="goalInput" placeholder="Название цели" maxlength="60">
+    <button class="btn" onclick="addGoal()">➕ Создать</button>
+  </div>
+</div>
+
+<!-- ЭЗОТЕРИКА -->
+<div class="page" id="page-eso">
+  <div class="section-title">ᚱ Руна дня</div>
+  <div class="card primary" style="text-align:center">
+    <div id="runeIcon" style="font-size:100px;line-height:1;color:#4facfe">ᚠ</div>
+    <div id="rune style="font-size:20px;font-weight:900;margin:10px 0 6px">—</div>
+    <div id="runeMean" style="font-size:13px;color:#a8a8bd;font-weight:600">—</div>
+  </div>
+  <div class="section-title">💎 Камень дня</div>
+  <div class="card primary" style="text-align:center">
+    <div id="stoneIcon" style="font-size:70px;margin:8px 0">💎</div>
+    <div id="stoneName" style="font-size:20px;font-weight:900;margin-bottom:6px">—</div>
+    <div id="stoneProps" style="font-size:13px;color:#a8a8bd;font-weight:600">—</div>
+  </div>
+  <div class="section-title">🌙 Луна</div>
+  <div class="card primary" style="text-align:center">
+    <div id="moonIcon" style="font-size:70px;margin:8px 0">🌑</div>
+    <div id="moonName" style="font-size:20px;font-weight:900;margin-bottom:6px">—</div>
+    <div id="moonEffect" style="font-size:13px;color:#a8a8bd;font-weight:600">—</div>
+  </div>
+  <div class="section-title">🎨 Цвет дня</div>
+  <div class="card" style="text-align:center">
+    <div id="colorCircle" style="width:110px;height:110px;border-radius:50%;margin:0 auto 12px;background:#FFD700"></div>
+    <div id="colorName" style="font-size:16px;font-weight:900">—</div>
+    <div id="colorPlanet" style="font-size:12px;color:#6e6e88;font-weight:700;margin-top:4px">—</div>
+  </div>
+  <div class="section-title">🎱 Шар Да / Нет</div>
+  <div class="card primary" style="text-align:center">
+    <div id="ballAnswer" style="font-size:22px;font-weight:900;margin:20px 0;min-height:30px">🎱</div>
+    <button class="btn" onclick="askBall()">Задать вопрос</button>
+  </div>
+  <div class="section-title">✨ Гороскоп</div>
+  <div class="card">
+    <div class="info-text">Заполни дату рождения в профиле, чтобы видеть свой знак.</div>
+    <div id="zodiacBox"></div>
+  </div>
+</div>
+
+<!-- ПРИРОДА -->
+<div class="page" id="page-nature">
+  <div class="section-title">🌱 Сад</div>
+  <div id="gardenList"></div>
+  <div class="section-title">🐝 Пасека</div>
+  <div id="beesBox"></div>
+  <div class="section-title">🍄 Грибница</div>
+  <div id="mushroomsBox"></div>
+  <div class="section-title">🌿 Травы</div>
+  <div id="herbsList"></div>
+</div>
+
+<!-- ЗНАНИЯ -->
+<div class="page" id="page-know">
+  <div class="section-title">📖 Библиотека</div>
+  <div id="booksList"></div>
+  <div class="section-title">📚 База знаний</div>
+  <div id="knowledgeList"></div>
+  <div class="section-title">💚 Здоровье</div>
+  <div id="healthList"></div>
+  <div class="section-title">🔮 Эзотерика-словарь</div>
+  <div id="esoKbList"></div>
+</div>
+
+<!-- ЕЩЁ -->
+<div class="page" id="page-more">
+  <div class="section-title">👤 Профиль</div>
+  <div id="profileBox"></div>
+  <div class="section-title">💭 Рефлексия дня</div>
+  <div id="reflectionBox"></div>
+  <div class="section-title">🏆 Дневник побед</div>
+  <div id="winsBox"></div>
+  <div class="section-title">🙏 Благодарность</div>
+  <div id="gratBox"></div>
+  <div class="section-title">💡 Инсайты</div>
+  <div id="insightsBox"></div>
+  <div class="section-title">📊 Аналитика</div>
+  <div id="analyticsBox"></div>
+  <div class="section-title">⚙️ Настройки</div>
+  <div id="settingsBox"></div>
+</div>
+
+</div>
+
+<div class="menu">
+<button class="menu-btn active" data-page="game" onclick="switchPage('game')">🎮<span>Игра</span></button>
+<button class="menu-btn" data-page="develop" onclick="switchPage('develop')">🎯<span>Развитие</span></button>
+<button class="menu-btn" data-page="track" onclick="switchPage('track')">📊<span>Трекеры</span></button>
+<button class="menu-btn" data-page="eso" onclick="switchPage('eso')">🔮<span>Эзо</span></button>
+<button class="menu-btn" data-page="nature" onclick="switchPage('nature')">🌱<span>Природа</span></button>
+<button class="menu-btn" data-page="know" onclick="switchPage('know')">📚<span>Знания</span></button>
+<button class="menu-btn" data-page="more" onclick="switchPage('more')">⚙️<span>Ещё</span></button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal" id="modal"><div class="modal-content" id="modalContent"></div></div>
+<script>
+'use strict';
+
+/* ============ КОНСТАНТЫ ============ */
+var SAVE_KEY='put16_save_v1';
+var XP_BASE=150;
+var XP_STEP=50;
+var COOLDOWN_H=9;
+var MAX_PRAC_DAY=2;
+var PRAC_LEVEL_EVERY=5;
+
+var RANKS=[
+{min:1,icon:'🌱',name:'Росток'},{min:3,icon:'🌿',name:'Побег'},{min:5,icon:'🌳',name:'Дерево'},
+{min:8,icon:'⭐',name:'Звезда'},{min:12,icon:'💫',name:'Комета'},{min:18,icon:'🌟',name:'Свет'},
+{min:25,icon:'🔥',name:'Огонь'},{min:35,icon:'⚡',name:'Молния'},{min:50,icon:'👑',name:'Владыка'}
+];
+var TITLES=['Новичок','Искатель','Ученик','Практик','Странник','Воин','Мастер','Мудрец','Хранитель','Проводник','Творец','Легенда'];
+
+var PRACTICES=[
+{id:'meditation',icon:'🧘',name:'Медитация',cat:'mind',desc:'10 минут тишины',xp:25,sec:600},
+{id:'breath',icon:'🌬️',name:'Дыхание 4-7-8',cat:'breath',desc:'Успокоение',xp:15,sec:180},
+{id:'cold',icon:'🚿',name:'Холодный душ',cat:'body',desc:'Закалка',xp:30,sec:120},
+{id:'sport',icon:'💪',name:'Тренировка',cat:'body',desc:'Любая нагрузка',xp:35,sec:1800},
+{id:'read',icon:'📖',name:'Чтение',cat:'mind',desc:'20 минут',xp:20,sec:1200},
+{id:'journal',icon:'📝',name:'Дневник',cat:'mind',desc:'Записать мысли',xp:20,sec:600},
+{id:'walk',icon:'🚶',name:'Прогулка',cat:'body',desc:'30 минут',xp:25,sec:1800},
+{id:'water',icon:'💧',name:'Вода 2л',cat:'health',desc:'За день',xp:15,sec:5},
+{id:'nosugar',icon:'🚫',name:'Без сахара',cat:'health',desc:'Целый день',xp:30,sec:5},
+{id:'gratitude',icon:'🙏',name:'Благодарность',cat:'spirit',desc:'3 вещи',xp:20,sec:300},
+{id:'affirm',icon:'✨',name:'Аффирмация',cat:'spirit',desc:'Вслух',xp:15,sec:60},
+{id:'plan',icon:'📋',name:'План дня',cat:'disc',desc:'Утром',xp:20,sec:300},
+{id:'nophone',icon:'📵',name:'Без телефона',cat:'disc',desc:'1 час',xp:25,sec:3600},
+{id:'stretch',icon:'🤸',name:'Растяжка',cat:'body',desc:'15 минут',xp:20,sec:900},
+{id:'sleep',icon:'😴',name:'Режим сна',cat:'health',desc:'До 23:00',xp:30,sec:5}
+];
+var CAT_NAMES={mind:'Разум',body:'Тело',breath:'Дыхание',health:'Здоровье',spirit:'Дух',disc:'Дисциплина'};
+
+var FATE=[
+{icon:'☀️',name:'Солнце',task:'Улыбнись 5 незнакомцам',xp:30},
+{icon:'🌙',name:'Луна',task:'10 минут тишины',xp:25},
+{icon:'⭐',name:'Звезда',task:'Запиши 3 мечты',xp:20},
+{icon:'⚔️',name:'Воитель',task:'Сделай отложенное',xp:35},
+{icon:'👑',name:'Король',task:'Помоги кому-то',xp:30},
+{icon:'🔮',name:'Маг',task:'Сделай новое',xp:35},
+{icon:'💗',name:'Влюблённый',task:'Скажи «люблю»',xp:25},
+{icon:'🤱',name:'Мать',task:'Позаботься о себе',xp:25},
+{icon:'🌿',name:'Целитель',task:'Отдохни без вины',xp:30},
+{icon:'🕯️',name:'Отшельник',task:'Побудь один 30 мин',xp:25},
+{icon:'🎭',name:'Шут',task:'Сделай смешное',xp:20},
+{icon:'💀',name:'Смерть',task:'Выброси одну вещь',xp:30},
+{icon:'🗼',name:'Башня',task:'Сложный выбор',xp:35},
+{icon:'😈',name:'Дьявол',task:'Откажись от привычки',xp:35},
+{icon:'📯',name:'Суд',task:'Скажи правду',xp:30},
+{icon:'🎡',name:'Колесо',task:'Рискни в малом',xp:25},
+{icon:'🌍',name:'Мир',task:'Заверши начатое',xp:35},
+{icon:'⚖️',name:'Справедливость',task:'Восстанови баланс',xp:30},
+{icon:'📜',name:'Жрица',task:'Прочти 10 страниц',xp:25},
+{icon:'🏛️',name:'Император',task:'Составь план',xp:30},
+{icon:'⛪',name:'Иерофант',task:'Научи кого-то',xp:30},
+{icon:'🛞',name:'Колесница',task:'10000 шагов',xp:30},
+{icon:'🦁',name:'Сила',task:'Тренировка до отказа',xp:40},
+{icon:'🏺',name:'Умеренность',task:'Не спеши',xp:25}
+];
+
+var AFFIRMATIONS=[
+'Я — творец своей реальности','Каждый день я становлюсь лучше','Я достоин любви и уважения',
+'Моё спокойствие — моя сила','Я выбираю радость здесь и сейчас','Я отпускаю то, что не служит мне',
+'Во мне есть всё для успеха','Я благодарен за этот день','Мои мысли создают мою жизнь',
+'Я сильнее, чем думаю','Я иду своим путём','Сегодня — лучший день','Я выбираю себя',
+'Мой путь уникален','Я способен на большее','Здоровье крепнет','Я притягиваю хорошее',
+'Спокойствие непоколебимо','Каждое препятствие — урок','Моё тело — мой дом'
+];
+
+var MANTRAS=[
+{text:'ОМ',mean:'Первичный звук вселенной'},
+{text:'СО ХАМ',mean:'Я есть То'},
+{text:'ОМ МАНИ ПАДМЕ ХУМ',mean:'Сочувствие и мудрость'},
+{text:'ЯМ',mean:'Мантра сердца'},
+{text:'ХАМ',mean:'Мантра горла'},
+{text:'ВАМ',mean:'Мантра воды'},
+{text:'ЛАМ',mean:'Мантра земли'},
+{text:'РАМ',mean:'Мантра огня'},
+{text:'ШИВАЙЯ',mean:'Внутренний покой'},
+{text:'ГАТЭ ГАТЭ',mean:'За пределы'}
+];
+
+var QUOTES=[
+{text:'Путь в тысячу ли начинается с шага.',author:'Лао-цзы'},
+{text:'Мы то, что мы делаем постоянно.',author:'Аристотель'},
+{text:'Знание — сила.',author:'Бэкон'},
+{text:'Кто владеет собой, владеет миром.',author:'Сенека'},
+{text:'Дисциплина — это свобода.',author:'Джим Рон'},
+{text:'Сначала привычки, потом они создают тебя.',author:'Драйден'},
+{text:'Меняй себя — мир изменится.',author:'Мудрость'},
+{text:'Счастье — это не цель, а путь.',author:'Неизвестный'},
+{text:'Рискни идти далеко.',author:'Элиот'},
+{text:'Будь изменением.',author:'Ганди'}
+];
+
+var QUESTS_POOL=[
+{id:'q1',icon:'🚶',text:'Прогулка 30 минут',xp:30},
+{id:'q2',icon:'💧',text:'Выпить 2 л воды',xp:25},
+{id:'q3',icon:'📖',text:'Прочитать 20 страниц',xp:30},
+{id:'q4',icon:'🧘',text:'Медитация 10 минут',xp:35},
+{id:'q5',icon:'💪',text:'Тренировка 30 минут',xp:40},
+{id:'q6',icon:'📵',text:'Час без соцсетей',xp:30},
+{id:'q7',icon:'🙏',text:'3 благодарности',xp:20},
+{id:'q8',icon:'📋',text:'Составить план',xp:25},
+{id:'q9',icon:'🌅',text:'Встать до 7 утра',xp:35},
+{id:'q10',icon:'😴',text:'Лечь до 23:00',xp:30},
+{id:'q11',icon:'🥦',text:'3 порции овощей',xp:25},
+{id:'q12',icon:'📝',text:'Записать мысли',xp:25},
+{id:'q13',icon:'🚿',text:'Холодный душ',xp:40},
+{id:'q14',icon:'🤸',text:'Растяжка 15 минут',xp:25},
+{id:'q15',icon:'📴',text:'2 часа без телефона',xp:35}
+];
+
+var COURSES=[
+{id:'c1',icon:'🧘',name:'21 день медитации',days:21,xp:50,desc:'10 минут в день'},
+{id:'c2',icon:'🚿',name:'30 дней холода',days:30,xp:60,desc:'Холодный душ'},
+{id:'c3',icon:'📖',name:'14 дней чтения',days:14,xp:40,desc:'20 страниц'},
+{id:'c4',icon:'💪',name:'30 дней спорта',days:30,xp:70,desc:'20+ минут'},
+{id:'c5',icon:'🚫',name:'7 дней без сахара',days:7,xp:80,desc:'Полный отказ'},
+{id:'c6',icon:'🌅',name:'21 день подъёма',days:21,xp:60,desc:'Вставать в 6:00'}
+];
+
+var ASKESIS=[
+{id:'a1',icon:'🍬',name:'Без сахара',days:7,xp:200,desc:'Не есть сладкое'},
+{id:'a2',icon:'📵',name:'Без соцсетей',days:7,xp:200,desc:'Никаких соцсетей'},
+{id:'a3',icon:'🍷',name:'Без алкоголя',days:14,xp:300,desc:'Полный отказ'},
+{id:'a4',icon:'☕',name:'Без кофеина',days:7,xp:180,desc:'Ни кофе, ни чая'},
+{id:'a5',icon:'🥩',name:'Без мяса',days:7,xp:200,desc:'Вегетарианство'},
+{id:'a6',icon:'🤐',name:'Молчание',days:3,xp:250,desc:'Утром/вечером'},
+{id:'a7',icon:'🚿',name:'Холодный душ',days:30,xp:500,desc:'Каждое утро'}
+];
+
+var BARRIERS=[
+{id:'b1',icon:'🛋️',name:'Лень',xp:50,desc:'Сделай отложенное'},
+{id:'b2',icon:'😨',name:'Страх',xp:60,desc:'Сделай страшное'},
+{id:'b3',icon:'😡',name:'Гнев',xp:60,desc:'Сохрани спокойствие'},
+{id:'b4',icon:'🦚',name:'Гордыня',xp:55,desc:'Попроси прощения'},
+{id:'b5',icon:'💰',name:'Жадность',xp:55,desc:'Отдай ценное'},
+{id:'b6',icon:'👁️',name:'Зависть',xp:50,desc:'Порадуйся за другого'},
+{id:'b7',icon:'🍔',name:'Обжорство',xp:50,desc:'Лёгкая еда'},
+{id:'b8',icon:'💋',name:'Похоть',xp:60,desc:'Воздержание'}
+];
+
+var BOSSES=[
+{id:'boss1',icon:'🛋️',name:'Повелитель Лени',hp:500,xp:300,desc:'Победи действием'},
+{id:'boss2',icon:'😱',name:'Тень Страха',hp:600,xp:350,desc:'Посмотри в глаза'},
+{id:'boss3',icon:'🔥',name:'Пламя Гнева',hp:550,xp:320,desc:'Укроти пламя'},
+{id:'boss4',icon:'👑',name:'Корона Гордыни',hp:520,xp:310,desc:'Смири себя'},
+{id:'boss5',icon:'🐲',name:'Золотой Дракон',hp:650,xp:380,desc:'Отпусти'},
+{id:'boss6',icon:'💚',name:'Зелёный Глаз',hp:480,xp:290,desc:'Порадуйся'},
+{id:'boss7',icon:'🍔',name:'Пожиратель',hp:560,xp:330,desc:'Укроти голод'},
+{id:'boss8',icon:'🧜',name:'Сирена',hp:580,xp:340,desc:'Не поддайся'}
+];
+
+var PETS=[
+{id:'rat',icon:'🐀',name:'Крыса',price:0,desc:'Ум',bonus:'+5% XP'},
+{id:'ox',icon:'🐂',name:'Бык',price:0,desc:'Сила',bonus:'+10% стрик'},
+{id:'tiger',icon:'🐯',name:'Тигр',price:200,desc:'Смелость',bonus:'+10% квесты'},
+{id:'rabbit',icon:'🐰',name:'Кролик',price:200,desc:'Скорость',bonus:'+10% практики'},
+{id:'dragon',icon:'🐉',name:'Дракон',price:500,desc:'Величие',bonus:'+15% XP'},
+{id:'snake',icon:'🐍',name:'Змея',price:350,desc:'Мудрость',bonus:'+10% эзо'},
+{id:'horse',icon:'🐴',name:'Лошадь',price:250,desc:'Свобода',bonus:'+10% путь'},
+{id:'goat',icon:'🐐',name:'Коза',price:200,desc:'Творчество',bonus:'+10% баланс'},
+{id:'monkey',icon:'🐒',name:'Обезьяна',price:300,desc:'Ловкость',bonus:'+10% сундуки'},
+{id:'rooster',icon:'🐓',name:'Петух',price:250,desc:'Точность',bonus:'+10% цели'},
+{id:'dog',icon:'🐕',name:'Собака',price:300,desc:'Верность',bonus:'+10% достижения'},
+{id:'pig',icon:'🐷',name:'Свинья',price:200,desc:'Изобилие',bonus:'+10% финансы'}
+];
+
+var COLL_CARDS=[
+{id:'cc1',icon:'🌱',name:'Росток',rarity:'common'},
+{id:'cc2',icon:'🌿',name:'Побег',rarity:'common'},
+{id:'cc3',icon:'🌳',name:'Дерево',rarity:'uncommon'},
+{id:'cc4',icon:'🌸',name:'Цветение',rarity:'uncommon'},
+{id:'cc5',icon:'🔥',name:'Огонь',rarity:'rare'},
+{id:'cc6',icon:'⚡',name:'Молния',rarity:'rare'},
+{id:'cc7',icon:'🌟',name:'Звезда',rarity:'epic'},
+{id:'cc8',icon:'👑',name:'Корона',rarity:'epic'},
+{id:'cc9',icon:'🐉',name:'Дракон',rarity:'legendary'},
+{id:'cc10',icon:'🌌',name:'Космос',rarity:'legendary'}
+];
+
+var CHEST_RARITY=[
+{id:'common',name:'Обычный',xpMin:10,xpMax:30,weight:60},
+{id:'uncommon',name:'Необычный',xpMin:30,xpMax:60,weight:25},
+{id:'rare',name:'Редкий',xpMin:60,xpMax:120,weight:10},
+{id:'epic',name:'Эпический',xpMin:120,xpMax:250,weight:4},
+{id:'legendary',name:'Легендарный',xpMin:250,xpMax:500,weight:1}
+];
+
+var WHEEL_PRIZES=[
+{label:'+10 XP',xp:10,weight:25},
+{label:'+25 XP',xp:25,weight:20},
+{label:'+50 XP',xp:50,weight:15},
+{label:'+75 XP',xp:75,weight:10},
+{label:'+100 XP',xp:100,weight:8},
+{label:'+150 XP',xp:150,weight:4},
+{label:'Пусто',xp:0,weight:18}
+];
+
+var DOMAIN_BUILDINGS=[
+{id:'hut',icon:'🛖',name:'Хижина',price:100,income:5},
+{id:'house',icon:'🏠',name:'Дом',price:300,income:15},
+{id:'tower',icon:'🗼',name:'Башня',price:800,income:40},
+{id:'castle',icon:'🏰',name:'Замок',price:2000,income:100},
+{id:'temple',icon:'⛩️',name:'Храм',price:5000,income:250},
+{id:'garden',icon:'🌳',name:'Сад',price:1500,income:60},
+{id:'forge',icon:'⚒️',name:'Кузница',price:1200,income:50},
+{id:'library',icon:'📚',name:'Библиотека',price:900,income:35}
+];
+
+var ACHIEVEMENTS=[
+{id:'first',icon:'🌱',name:'Первый шаг'},
+{id:'week',icon:'🌿',name:'Неделя'},
+{id:'month',icon:'🌳',name:'Месяц'},
+{id:'prac10',icon:'🔥',name:'10 практик'},
+{id:'prac50',icon:'⚡',name:'50 практик'},
+{id:'prac100',icon:'💎',name:'100 практик'},
+{id:'lvl5',icon:'⭐',name:'Ур. 5'},
+{id:'lvl10',icon:'👑',name:'Ур. 10'},
+{id:'boss1',icon:'⚔️',name:'Первый босс'},
+{id:'boss5',icon:'🛡️',name:'5 боссов'},
+{id:'pet1',icon:'🐾',name:'Питомец'},
+{id:'card1',icon:'🎴',name:'5 карточек'}
+];
+
+var HABITS=[
+{id:'water',icon:'💧',name:'Вода 2л'},
+{id:'sport',icon:'💪',name:'Тренировка'},
+{id:'read',icon:'📖',name:'Чтение'},
+{id:'medit',icon:'🧘',name:'Медитация'},
+{id:'sleep',icon:'😴',name:'Сон 8ч'},
+{id:'walk',icon:'🚶',name:'Прогулка'},
+{id:'nosugar',icon:'🚫',name:'Без сахара'},
+{id:'journal',icon:'📝',name:'Дневник'}
+];
+
+var RUNES=[
+{icon:'ᚠ',name:'Феху',mean:'Прибыль'},
+{icon:'ᚢ',name:'Уруз',mean:'Сила'},
+{icon:'ᚦ',name:'Турисаз',mean:'Защита'},
+{icon:'ᚨ',name:'Ансуз',mean:'Мудрость'},
+{icon:'ᚱ',name:'Райдо',mean:'Путь'},
+{icon:'ᚲ',name:'Кано',mean:'Огонь'},
+{icon:'ᚷ',name:'Гебо',mean:'Дар'},
+{icon:'ᚹ',name:'Вуньо',mean:'Радость'},
+{icon:'ᚺ',name:'Хагалаз',mean:'Очищение'},
+{icon:'ᚾ',name:'Наутиз',mean:'Терпение'},
+{icon:'ᛁ',name:'Иса',mean:'Пауза'},
+{icon:'ᛃ',name:'Йера',mean:'Урожай'},
+{icon:'ᛇ',name:'Эйваз',mean:'Инициация'},
+{icon:'ᛈ',name:'Пертро',mean:'Тайна'},
+{icon:'ᛉ',name:'Альгиз',mean:'Защита'},
+{icon:'ᛊ',name:'Совило',mean:'Победа'},
+{icon:'ᛏ',name:'Тиваз',mean:'Честь'},
+{icon:'ᛒ',name:'Беркана',mean:'Рост'},
+{icon:'ᛖ',name:'Эваз',mean:'Доверие'},
+{icon:'ᛗ',name:'Манназ',mean:'Самость'},
+{icon:'ᛚ',name:'Лагуз',mean:'Интуиция'},
+{icon:'ᛜ',name:'Ингваз',mean:'Потенциал'},
+{icon:'ᛞ',name:'Дагаз',mean:'Трансформация'},
+{icon:'ᛟ',name:'Отала',mean:'Корни'}
+];
+
+var STONES=[
+{icon:'💎',name:'Алмаз',props:'Чистота, сила'},
+{icon:'❤️',name:'Рубин',props:'Страсть, лидерство'},
+{icon:'💚',name:'Изумруд',props:'Любовь, мудрость'},
+{icon:'💙',name:'Сапфир',props:'Истина, фокус'},
+{icon:'💜',name:'Аметист',props:'Покой, интуиция'},
+{icon:'💛',name:'Топаз',props:'Радость, удача'},
+{icon:'🌈',name:'Опал',props:'Творчество, магия'},
+{icon:'🤍',name:'Жемчуг',props:'Чистота, покой'},
+{icon:'🩵',name:'Бирюза',props:'Защита, удача'},
+{icon:'🌊',name:'Аквамарин',props:'Спокойствие, ясность'},
+{icon:'🤎',name:'Агат',props:'Стойкость, баланс'},
+{icon:'🖤',name:'Оникс',props:'Сила воли'}
+];
+
+var MOON_PHASES=[
+{icon:'🌑',name:'Новолуние',effect:'Планируй, начинай новое'},
+{icon:'🌒',name:'Растущая',effect:'Действуй, развивай'},
+{icon:'🌓',name:'I четверть',effect:'Преодолевай препятствия'},
+{icon:'🌔',name:'Прибывающая',effect:'Завершай начатое'},
+{icon:'🌕',name:'Полнолуние',effect:'Пик энергии'},
+{icon:'🌖',name:'Убывающая',effect:'Отпускай, очищай'},
+{icon:'🌗',name:'III четверть',effect:'Прощай, анализируй'},
+{icon:'🌘',name:'Бальзамическая',effect:'Отдыхай, медитируй'}
+];
+
+var WEEKDAY=[
+{name:'Воскресенье',planet:'Солнце',hex:'#FFD700'},
+{name:'Понедельник',planet:'Луна',hex:'#C0C0C0'},
+{name:'Вторник',planet:'Марс',hex:'#FF4444'},
+{name:'Среда',planet:'Меркурий',hex:'#4facfe'},
+{name:'Четверг',planet:'Юпитер',hex:'#b06bff'},
+{name:'Пятница',planet:'Венера',hex:'#4cd964'},
+{name:'Суббота',planet:'Сатурн',hex:'#666666'}
+];
+
+var BALL_ANSWERS=[
+{text:'Да',icon:'✅'},{text:'Нет',icon:'❌'},{text:'Определённо да',icon:'💚'},
+{text:'Определённо нет',icon:'🚫'},{text:'Возможно',icon:'🤔'},{text:'Скорее да',icon:'👍'},
+{text:'Скорее нет',icon:'👎'},{text:'Спроси позже',icon:'⏳'},{text:'Не могу сказать',icon:'🤷'},
+{text:'Сконцентрируйся',icon:'🧘'},{text:'Бесспорно',icon:'🌟'},{text:'Сомнительно',icon:'❓'}
+];
+
+var ZODIAC=[
+{name:'Овен',icon:'♈',end:[4,19],element:'Огонь',planet:'Марс'},
+{name:'Телец',icon:'♉',end:[5,20],element:'Земля',planet:'Венера'},
+{name:'Близнецы',icon:'♊',end:[6,20],element:'Воздух',planet:'Меркурий'},
+{name:'Рак',icon:'♋',end:[7,22],element:'Вода',planet:'Луна'},
+{name:'Лев',icon:'♌',end:[8,22],element:'Огонь',planet:'Солнце'},
+{name:'Дева',icon:'♍',end:[9,22],element:'Земля',planet:'Меркурий'},
+{name:'Весы',icon:'♎',end:[10,22],element:'Воздух',planet:'Венера'},
+{name:'Скорпион',icon:'♏',end:[11,21],element:'Вода',planet:'Плутон'},
+{name:'Стрелец',icon:'♐',end:[12,21],element:'Огонь',planet:'Юпитер'},
+{name:'Козерог',icon:'♑',end:[1,19],element:'Земля',planet:'Сатурн'},
+{name:'Водолей',icon:'♒',end:[2,18],element:'Воздух',planet:'Уран'},
+{name:'Рыбы',icon:'♓',end:[3,20],element:'Вода',planet:'Нептун'}
+];
+
+var GARDEN_CULTURES=[
+{id:'tomato',icon:'🍅',name:'Томат',days:100,sow:[3,4,5]},
+{id:'cucumber',icon:'🥒',name:'Огурец',days:60,sow:[4,5,6]},
+{id:'potato',icon:'🥔',name:'Картофель',days:90,sow:[4,5]},
+{id:'carrot',icon:'🥕',name:'Морковь',days:80,sow:[4,5,6]},
+{id:'onion',icon:'🧅',name:'Лук',days:90,sow:[3,4,5]},
+{id:'garlic',icon:'🧄',name:'Чеснок',days:240,sow:[9,10]},
+{id:'pepper',icon:'🌶️',name:'Перец',days:120,sow:[2,3,4]},
+{id:'cabbage',icon:'🥬',name:'Капуста',days:120,sow:[4,5,6]},
+{id:'beet',icon:'🟣',name:'Свёкла',days:110,sow:[4,5,6]},
+{id:'radish',icon:'🔴',name:'Редис',days:25,sow:[3,4,5,6,7]},
+{id:'greens',icon:'🌿',name:'Зелень',days:30,sow:[3,4,5,6,7]},
+{id:'strawberry',icon:'🍓',name:'Клубника',days:365,sow:[8,9]}
+];
+
+var HONEY_PLANTS=[
+{name:'Липа',icon:'🌳',month:[6,7],honey:'Высокий'},
+{name:'Акация',icon:'🌼',month:[5,6],honey:'Очень высокий'},
+{name:'Гречиха',icon:'🌾',month:[6,7],honey:'Высокий'},
+{name:'Подсолнечник',icon:'🌻',month:[7,8],honey:'Высокий'},
+{name:'Донник',icon:'🌿',month:[6,7],honey:'Высокий'},
+{name:'Клевер',icon:'☘️',month:[5,6,7],honey:'Средний'},
+{name:'Иван-чай',icon:'💜',month:[6,7,8],honey:'Средний'},
+{name:'Малина',icon:'🍇',month:[6,7],honey:'Средний'},
+{name:'Одуванчик',icon:'🌼',month:[4,5],honey:'Средний'},
+{name:'Фацелия',icon:'💙',month:[5,6,7],honey:'Высокий'}
+];
+
+var MUSHROOMS=[
+{id:'oyster',icon:'🍄',name:'Вешенка',days:21},
+{id:'shiitake',icon:'🍄',name:'Шиитаке',days:60},
+{id:'champignon',icon:'🍄',name:'Шампиньон',days:35},
+{id:'reishi',icon:'🍄',name:'Рейши',days:90},
+{id:'lion',icon:'🍄',name:'Ежовик',days:30},
+{id:'enoki',icon:'🍄',name:'Эноки',days:28}
+];
+
+var HERBS=[
+{icon:'🌼',name:'Ромашка',time:'Июнь-август',props:'Успокаивающее'},
+{icon:'🌿',name:'Мята',time:'Июнь-сентябрь',props:'Пищеварение'},
+{icon:'🍃',name:'Мелисса',time:'Июнь-август',props:'Противовирусное'},
+{icon:'🌻',name:'Календула',time:'Июнь-сентябрь',props:'Антисептик'},
+{icon:'🌿',name:'Шалфей',time:'Июнь-июль',props:'Противовоспалительное'},
+{icon:'🌾',name:'Тысячелистник',time:'Июнь-август',props:'Кровоостанавливающее'},
+{icon:'💛',name:'Зверобой',time:'Июнь-июль',props:'Антидепрессант'},
+{icon:'🌿',name:'Пустырник',time:'Июль-август',props:'Сердце'},
+{icon:'🍃',name:'Подорожник',time:'Май-сентябрь',props:'Заживление'},
+{icon:'🌼',name:'Одуванчик',time:'Апрель-май',props:'Печень'},
+{icon:'💜',name:'Иван-чай',time:'Июнь-август',props:'Противовоспалительное'},
+{icon:'🌿',name:'Чабрец',time:'Июнь-август',props:'От кашля'}
+];
+
+var BOOKS=[
+{id:'b1',title:'Атомные привычки',author:'Джеймс Клир',summary:'4 закона: очевидно, привлекательно, легко, приятно.',tips:['Начни с 2 минут','Привяжи','Отслеживай']},
+{id:'b2',title:'Сила воли',author:'Келли Макгонигал',summary:'Воля — мышца, тренируется.',tips:['Высыпайся','Медитируй','Дыши']},
+{id:'b3',title:'Думай медленно',author:'Канеман',summary:'2 системы мышления.',tips:['Проверяй','Не верь первому','Ищи данные']},
+{id:'b4',title:'Поток',author:'Чиксентмихайи',summary:'Счастье — в потоке.',tips:['Задачи сложнее','Убирай отвлечения','Связь']},
+{id:'b5',title:'7 навыков',author:'Кови',summary:'Проактивность.',tips:['Планируй','Делегируй','Обновляйся']},
+{id:'b6',title:'Монах с феррари',author:'Шарма',summary:'Дисциплина ума, тела, души.',tips:['Вставай рано','Медитируй','Читай']},
+{id:'b7',title:'Сила настоящего',author:'Толле',summary:'Живи в моменте.',tips:['Наблюдай мысли','Следи за телом','Дыши']},
+{id:'b8',title:'Книга о теле',author:'Диас',summary:'Движение, питание, сон.',tips:['8000 шагов','Меньше сахара','7-9 часов']},
+{id:'b9',title:'Думай и богатей',author:'Хилл',summary:'Мысль материальна.',tips:['Запиши цель','Найди ментора','Действуй']},
+{id:'b10',title:'Богатый папа',author:'Кийосаки',summary:'Активы важнее пассивов.',tips:['Инвестируй','Следи за потоком','Обучайся']}
+];
+
+var KNOWLEDGE=[
+{cat:'Продуктивность',icon:'⏱',title:'Правило 2 минут',text:'Дело меньше 2 минут — сделай сразу.'},
+{cat:':'Продуктивность',icon:'🍅',title:'PФиomodoro',text:'нан25 минут работы, 5 отдыха.'},
+{cat:'Продуктивность',icon:'🐸',title:'Съешь лягушку',text:'Начинай с неприятной задачи.'},
+{cat:'Привычки',icon:'📈',title:'Правило 1%',text:'1% в день = рост в 37 раз за год.'},
+{cat:'Привычки',icon:'🔗',title:'Привязка',text:'После [старой] — [новая].'},
+{cat:'Привычки',icon:'⏰',title:'21/66/90',text:'Привычка формируется за 66 дней.'},
+{cat:'Сон',icon:'😴',title:'Циклы',text:'1 цикл ≈ 90 мин. Оптимум 5-6 циклов.'},
+{cat:'Сон',icon:'🌙',title:'Мелатонин',text:'За 2 часа без экранов.'},
+{cat:'Питание',icon:'🥩',title:'Белок',text:'1.6-2.2 г/кг для мышц.'},
+{cat:'Питание',icon:'💧',title:'Вода',text:'30 мл/кг в день.'},
+{cat:'Питание',icon:'🍽',title:'Тарелка',text:'½ овощи, ¼ белок, ¼ углеводы.'},
+{cat:'Мышление',icon:'🧠',title:'Рост',text:'«Я не умею» → «пока не умею».'},
+{catсы',icon:'💰',title:'50/30/20',text:'50 нужно, 30 хочу, 20 сбережения.'},
+{cat:'Финансы',icon:'🏦',title:'Подушка',text:'3-6 месяцев расходов.'},
+{cat:'Медитация',icon:'🧘',title:'10 минут',text:'Начни с 5 минут.'},
+{cat:'Спорт',icon:'💪',title:'Прогрессия',text:'+2.5 кг/неделю или +1 повтор.'},
+{cat:'Спорт',icon:'🦵',title:'Ноги',text:'Приседания и тяги — база.'},
+{cat:'Стресс',icon:'🌬️',title:'4-7-8',text:'Вдох 4, задержка 7, выдох 8.'}
+];
+
+var HEALTH=[
+{icon:'❤️',title:'Сердце',text:'150 мин кардио в неделю — риск -30%.'},
+{icon:'🧠',title:'Мозг',text:'Новое стимулирует нейропластичность.'},
+{icon:'🦴',title:'Кости',text:'Силовые + витамин D + кальций.'},
+{icon:'👁️',title:'Зрение',text:'Правило 20-20-20.'},
+{icon:'🫁',title:'Дыхание',text:'Диафрагмальное снижает кортизол.'},
+{icon:'🦷',title:'Зубы',text:'2 мин, 2 раза в день.'},
+{icon:'🩸',title:'Кровь',text:'Донорство раз в 3 месяца.'},
+{icon:'💤',title:'Сон',text:'Меньше 6 часов = риск ожирения.'},
+{icon:'🚶',title:'Движение',text:'8000 шагов в день.'},
+{icon:'🌞',title:'Витамин D',text:'15 минут солнца.'}
+];
+
+var ESO_KB=[
+{term:'Астрал',def:'План эмоций и желаний.'},
+{term:'Аура',def:'Энергетическое поле.'},
+{term:'Чакра',def:'Энергетический центр.'},
+{term:'Карма',def:'Закон причины и следствия.'},
+{term:'Реинкарнация',def:'Перерождение души.'},
+{term:'Медитация',def:'Сосредоточение ума.'},
+{term:'Мантра',def:'Священный звук.'},
+{term:'Кундалини',def:'Энергия у основания позвоночника.'},
+{term:'Прана',def:'Жизненная энергия.'},
+{term:'Ци',def:'Жизненная энергия в Китае.'},
+{term:'Дао',def:'Путь, закон вселенной.'},
+{term:'Дзен',def:'Школа буддизма.'},
+{term:'Асана',def:'Поза в йоге.'},
+{term:'Пранаяма',def:'Дыхательные практики.'},
+{term:'Нирвана',def:'Освобождение от страданий.'},
+{term:'Сансара',def:'Круговорот рождения.'},
+{term:'Дхарма',def:'Закон, долг.'},
+{term:'Мудра',def:'Положение пальцев.'},
+{term:'Руна',def:'Символ гадания.'},
+{term:'Таро',def:'Система карт.'},
+{term:'Астрология',def:'Влияние планет.'},
+{term:'Нумерология',def:'Изучение чисел.'},
+{term:'Фэн-шуй',def:'Организация пространства.'},
+{term:'Ясновидение',def:'Видеть скрытое.'},
+{term:'Телепатия',def:'Передача мыслей.'},
+{term:'Интуиция',def:'Знание без логики.'},
+{term:'Озарение',def:'Внезапное понимание.'},
+{term:'Сатори',def:'Просветление в дзен.'},
+{term:'Самадхи',def:'Высшее сознание.'},
+{term:'Мокша',def:'Освобождение.'},
+{term:'Космос',def:'Упорядоченная вселенная.'},
+{term:'Стихии',def:'Земля, Вода, Огонь, Воздух.'}
+];
+
+var THEMES=[
+{id:'cosmos',name:'Космос',icon:'🌌'},
+{id:'forest',name:'Лес',icon:'🌲'},
+{id:'sunset',name:'Закат',icon:'🌇'},
+{id:'ocean',name:'Океан',icon:'🌊'},
+{id:'royal',name:'Королевский',icon:'👑'},
+{id:'gold',name:'Золото',icon:'✨'},
+{id:'blood',name:'Кровь',icon:'🔥'},
+{id:'ice',name:'Лёд',icon:'❄️'}
+];
+
+var REFLECT_Q=[
+'Что сегодня было важным?','За что благодарен?','Что сделать лучше?','Какое чувство?',
+'Что нового?','Кому помог?','Что вдохновило?','Что откладывал?','Как позаботился?','Что отпустил?'
+];
+
+/* ============ СОСТОЯНИЕ ============ */
+var state=null;
+
+function defaultState(){
+return{
+version:1,
+xp:0,xpEarned:0,level:1,
+totalPractices:0,
+streak:0,maxStreak:0,
+lastActiveDay:'',
+profile:{name:'',birth:'',gender:'',height:0,weight:0,avatar:'🧘'},
+practices:{},
+customPractices:[],
+fateDone:{},
+fate:{day:'',idx:0},
+affirmation:{day:'',idx:0},
+mantra:{day:'',idx:0},
+quote:{day:'',idx:0},
+wheel:{day:'',spun:false},
+chest:{day:'',opened:false},
+weekly:{week:'',claimed:false},
+quests:{day:'',list:[],done:[]},
+courses:{},
+askesis:{},
+barriers:{},
+pathStep:0,
+pathProgress:0,
+bossesDefeated:[],
+currentBoss:{week:'',id:'',hp:0,maxHp:0,defeated:false},
+pets:{owned:['rat'],active:'rat',names:{rat:'Дух'}},
+cards:[],
+achievements:[],
+domain:{},
+habits:{},
+mood:{},
+weight:[],
+finance:{savings:[],strategy:''},
+goals:[],
+rune:{day:'',idx:0},
+stone:{day:'',idx:0},
+moon:{day:'',idx:0},
+color:{day:'',weekday:0},
+esoteric:{lastHoroscope:''},
+garden:[],
+bees:{hives:[]},
+mushrooms:[],
+booksRead:[],
+reflection:{},
+wins:{},
+gratitude:{},
+insights:[],
+theme:'cosmos',
+created:Date.now()
+};
+}
+
+function loadState(){
+try{
+var raw=localStorage.getItem(SAVE_KEY);
+if(!raw){state=defaultState();saveState();return;}
+var parsed=JSON.parse(raw);
+var def=defaultState();
+for(var k in def){
+if(!(k in parsed)) parsed[k]=def[k];
+else if(typeof def[k]==='object'&&def[k]!==null&&!Array.isArray(def[k])){
+for(var k2 in def[k]){if(!(k2 in parsed[k])) parsed[k][k2]=def[k][k2];}
+}
+}
+state=parsed;
+}catch(e){console.error('load',e);state=defaultState();}
+}
+
+function saveState(){
+try{localStorage.setItem(SAVE_KEY,JSON.stringify(state));}
+catch(e){console.error('save',e);}
+}
+
+/* ============ ДАТЫ ============ */
+function getToday(){
+var d=new Date();
+return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function getWeekKey(){
+var d=new Date();
+var o=new Date(d.getFullYear(),0,1);
+var w=Math.ceil((((d-o)/86400000)+o.getDay()+1)/7);
+return d.getFullYear()+'-W'+String(w).padStart(2,'0');
+}
+function daysDiff(a,b){
+return Math.round((new Date(b+'T00:00:00')-new Date(a+'T00:00:00'))/86400000);
+}
+function seedIndex(seed,len){
+var h=0;var s=String(seed);
+for(var i=0;i<s.length;i++){h=((h<<5)-h)+s.charCodeAt(i);h|=0;}
+return Math.abs(h)%len;
+}
+function weightedRandom(items){
+var total=0;
+for(var i=0;i<items.length;i++) total+=(items[i].weight||1);
+var r=Math.random()*total;
+for(var j=0;j<items.length;j++){
+r-=(items[j].weight||1);
+if(r<=0) return items[j];
+}
+return items[items.length-1];
+}
+
+/* ============ XP ============ */
+function xpForLevel(lvl){return XP_BASE+(lvl-1)*XP_STEP;}
+function getTitle(){return TITLES[Math.min(Math.floor((state.level-1)/2),TITLES.length-1)];}
+function getRank(){var r=RANKS[0];for(var i=0;i<RANKS.length;i++){if(state.level>=RANKS[i].min) r=RANKS[i];}return r;}
+
+function getXpMult(){
+var mult=1;
+for(var i=0;i<PETS.length;i++){
+if(PETS[i].id===state.pets.active&&PETS[i].bonus.indexOf('XP')!==-1){
+var m=PETS[i].bonus.match(/(\d+)/);
+if(m) mult+=parseInt(m[1],10)/100;
+}
+}
+return mult;
+}
+
+function addXP(amount,reason){
+if(!amount||amount<=0) return;
+var final=Math.round(amount*getXpMult());
+state.xp+=final;
+state.xpEarned+=final;
+var leveled=false;
+while(state.xp>=xpForLevel(state.level)){
+state.xp-=xpForLevel(state.level);
+state.level++;
+leveled=true;
+}
+// Стрик
+var today=getToday();
+if(state.lastActiveDay!==today){
+if(!state.lastActiveDay||state.lastActiveDay===today) state.streak=1;
+else{
+var diff=daysDiff(state.lastActiveDay,today);
+if(diff===1) state.streak++;
+else if(diff>1) state.streak=1;
+}
+state.lastActiveDay=today;
+if(state.streak>state.maxStreak) state.maxStreak=state.streak;
+}
+saveState();
+updateUI();
+if(leveled) showToast('🎉 Уровень '+state.level+'!');
+else showToast('+'+final+' XP');
+checkAchievements();
+}
+
+/* ============ ДОСТИЖЕНИЯ ============ */
+function unlockAch(id){
+if(state.achievements.indexOf(id)!==-1) return false;
+state.achievements.push(id);
+for(var i=0;i<ACHIEVEMENTS.length;i++){
+if(ACHIEVEMENTS[i].id===id){
+setTimeout(function(n,ic){return function(){showToast(ic+' '+n);};}(ACHIEVEMENTS[i].name,ACHIEVEMENTS[i].icon),300);
+break;
+}
+}
+saveState();
+return true;
+}
+
+function checkAchievements(){
+if(state.totalPractices>=1) unlockAch('first');
+if(state.totalPractices>=10) unlockAch('prac10');
+if(state.totalPractices>=50) unlockAch('prac50');
+if(state.totalPractices>=100) unlockAch('prac100');
+if(state.streak>=7) unlockAch('week');
+if(state.streak>=30) unlockAch('month');
+if(state.level>=5) unlockAch('lvl5');
+if(state.level>=10) unlockAch('lvl10');
+if(state.bossesDefeated.length>=1) unlockAch('boss1');
+if(state.bossesDefeated.length>=5) unlockAch('boss5');
+if(state.pets.owned.length>=1) unlockAch('pet1');
+if(state.cards.length>=5) unlockAch('card1');
+}
+
+/* ============ UI ============ */
+function updateUI(){
+try{
+var rank=getRank();
+var el=function(id){return document.getElementById(id);};
+if(el('statXp')) el('statXp').textContent=state.xpEarned;
+if(el('statLevel')) el('statLevel').textContent=state.level;
+if(el('statPrac')) el('statPrac').textContent=state.totalPractices;
+if(el('statStreak')) el('statStreak').textContent=state.streak;
+if(el('levelBadge')) el('levelBadge').textContent='Ур. '+state.level+' · '+getTitle();
+if(el('rankTitle')) el('rankTitle').textContent=rank.name;
+if(el('avatar')) el('avatar').textContent=state.profile.avatar||rank.icon;
+var next=xpForLevel(state.level);
+var pct=Math.min(100,(state.xp/next)*100);
+if(el('xpFill')) el('xpFill').style.width=pct+'%';
+if(el('xpText')) el('xpText').textContent=state.xp+' / '+next+' XP';
+}catch(e){console.error('updateUI',e);}
+}
+
+function switchPage(id){
+var pages=document.querySelectorAll('.page');
+for(var i=0;i<pages.length;i++) pages[i].classList.remove('active');
+var t=document.getElementById('page-'+id);
+if(t) t.classList.add('active');
+var btns=document.querySelectorAll('.menu-btn');
+for(var j=0;j<btns.length;j++){
+if(btns[j].getAttribute('data-page')===id) btns[j].classList.add('active');
+else btns[j].classList.remove('active');
+}
+if(id==='game'){renderGame();}
+if(id==='develop'){renderDevelop();}
+if(id==='track'){renderTrack();}
+if(id==='eso'){renderEso();}
+if(id==='nature'){renderNature();}
+if(id==='know'){renderKnow();}
+if(id==='more'){renderMore();}
+window.scrollTo({top:0,behavior:'smooth'});
+}
+
+var toastTimer=null;
+function showToast(msg){
+var el=document.getElementById('toast');
+if(!el) return;
+el.textContent=msg;
+el.classList.add('show');
+clearTimeout(toastTimer);
+toastTimer=setTimeout(function(){el.classList.remove('show');},2200);
+}
+
+function escapeHtml(s){
+return String(s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});
+}
+
+function openModal(html){
+var m=document.getElementById('modal');
+var c=document.getElementById('modalContent');
+c.innerHTML=html;
+m.classList.add('show');
+}
+function closeModal(){
+document.getElementById('modal').classList.remove('show');
+}
+
+/* ============ ФАТЕ / АФФИРМАЦИЯ / ЦИТАТА ============ */
+function renderDaily(){
+var today=getToday();
+if(state.fate.day!==today){
+state.fate={day:today,idx:seedIndex(today+'fate',FATE.length)};
+state.affirmation={day:today,idx:seedIndex(today+'aff',AFFIRMATIONS.length)};
+state.mantra={day:today,idx:seedIndex(today+'mantra',MANTRAS.length)};
+state.quote={day:today,idx:seedIndex(today+'quote',QUOTES.length)};
+saveState();
+}
+var card=FATE[state.fate.idx];
+var e=document.getElementById('fateIcon');
+if(e) e.textContent=card.icon;
+e=document.getElementById('fateName');
+if(e) e.textContent=card.name;
+e=document.getElementById('fateTask');
+if(e) e.textContent=card.task;
+var btn=document.getElementById('fateBtn');
+if(btn){
+if(state.fateDone[today]){
+btn.textContent='✅ Выполнено';
+btn.disabled=true;
+}else{
+btn.textContent='✅ Выполнил · +'+card.xp+' XP';
+btn.disabled=false;
+}
+}
+e=document.getElementById('affirm');
+if(e) e.textContent='«'+AFFIRMATIONS[state.affirmation.idx]+'»';
+e=document.getElementById('quoteText');
+if(e) e.textContent='«'+QUOTES[state.quote.idx].text+'»';
+e=document.getElementById('quoteAuth');
+if(e) e.textContent='— '+QUOTES[state.quote.idx].author;
+}
+
+function completeFate(){
+var today=getToday();
+if(state.fateDone[today]) return;
+state.fateDone[today]=true;
+state.totalPractices++;
+saveState();
+addXP(FATE[state.fate.idx].xp,'Карта дня');
+renderDaily();
+}
+
+/* ============ КОЛЕСО ============ */
+function spinWheel(){
+var today=getToday();
+if(state.wheel.day===today&&state.wheel.spun){
+showToast('Уже крутил сегодня');
+return;
+}
+var btn=document.getElementById('wheelBtn');
+var prize=document.getElementById('wheelPrize');
+if(btn) btn.disabled=true;
+var count=0;
+var interval=setInterval(function(){
+if(prize) prize.textContent=WHEEL_PRIZES[Math.floor(Math.random()*WHEEL_PRIZES.length)].label;
+count++;
+if(count>15){
+clearInterval(interval);
+var p=weightedRandom(WHEEL_PRIZES);
+if(prize) prize.textContent=p.label;
+state.wheel={day:today,spun:true};
+saveState();
+if(p.xp>0){
+addXP(p.xp,'Колесо');
+}else{
+showToast('😅 Пусто');
+}
+if(btn) btn.disabled=true;
+renderGame();
+}
+},80);
+}
+
+/* ============ СУНДУК ============ */
+function openChest(){
+var today=getToday();
+if(state.chest.day===today&&state.chest.opened){
+showToast('Уже открыт');
+return;
+}
+var r=weightedRandom(CHEST_RARITY);
+var xp=Math.floor(r.xpMin+Math.random()*(r.xpMax-r.xpMin+1));
+state.chest={day:today,opened:true};
+saveState();
+addXP(xp,'Сундук');
+showToast('🎁 '+r.name+' +'+xp+' XP');
+renderGame();
+}
+
+/* ============ БОСС ============ */
+function initBoss(){
+var week=getWeekKey();
+if(!state.currentBoss||state.currentBoss.week!==week||state.currentBoss.defeated){
+var b=BOSSES[seedIndex(week+'boss',BOSSES.length)];
+state.currentBoss={week:week,id:b.id,hp:b.hp,maxHp:b.hp,defeated:false};
+saveState();
+}
+}
+function hitBoss(dmg){
+if(!state.currentBoss||state.currentBoss.defeated) return;
+state.currentBoss.hp=Math.max(0,state.currentBoss.hp-dmg);
+if(state.currentBoss.hp===0){
+state.currentBoss.defeated=true;
+var b=null;
+for(var i=0;i<BOSSES.length;i++) if(BOSSES[i].id===state.currentBoss.id) b=BOSSES[i];
+if(b){
+state.bossesDefeated.push({week:state.currentBoss.week,id:b.id,t:Date.now()});
+addXP(b.xp,'Босс: '+b.name);
+showToast('⚔️ Босс повержен!');
+}
+}
+saveState();
+}
+
+/* ============ ПИТОМЦЫ ============ */
+function renderGame(){
+renderDaily();
+// Колесо
+var wheelPrize=document.getElementById('wheelPrize');
+var wheelBtn=document.getElementById('wheelBtn');
+var today=getToday();
+if(state.wheel.day===today&&state.wheel.spun){
+if(wheelPrize) wheelPrize.textContent='Уже крутил';
+if(wheelBtn) wheelBtn.disabled=true;
+}else{
+if(wheelPrize) wheelPrize.textContent='?';
+if(wheelBtn) wheelBtn.disabled=false;
+}
+
+// Сундук
+var chestIcon=document.getElementById('chestIcon');
+var chestState=document.getElementById('chestState');
+var chestBtn=document.getElementById('chestBtn');
+if(state.chest.day===today&&state.chest.opened){
+if(chestIcon) chestIcon.textContent='📭';
+if(chestState) chestState.textContent='Открыт сегодня';
+if(chestBtn) chestBtn.disabled=true;
+}else{
+if(chestIcon) chestIcon.textContent='📦';
+if(chestState) chestState.textContent='Открой раз в день';
+if(chestBtn) chestBtn.disabled=false;
+}
+
+// Босс
+initBoss();
+var b=null;
+for(var i=0;i<BOSSES.length;i++) if(BOSSES[i].id===state.currentBoss.id) b=BOSSES[i];
+if(b){
+var bi=document.getElementById('bossIcon');
+var bn=document.getElementById('bossName');
+var bd=document.getElementById('bossDesc');
+var bh=document.getElementById('bossHpFill');
+var bt=document.getElementById('bossHpText');
+if(bi) bi.textContent=b.icon;
+if(bn) bn.textContent=b.name;
+if(bd) bd.textContent=b.desc;
+var pct=(state.currentBoss.hp/state.currentBoss.maxHp)*100;
+if(bh) bh.style.width=pct+'%';
+if(bt) bt.textContent=state.currentBoss.hp+' / '+state.currentBoss.maxHp+' HP';
+}
+
+// Питомец
+var pet=null;
+for(var j=0;j<PETS.length;j++) if(PETS[j].id===state.pets.active) pet=PETS[j];
+if(pet){
+var pi=document.getElementById('petIcon');
+var pn=document.getElementById('petName');
+var pb=document.getElementById('petBonus');
+if(pi) pi.textContent=pet.icon;
+if(pn) pn.textContent=state.pets.names[pet.id]||pet.name;
+if(pb) pb.textContent=pet.bonus;
+}
+
+// Домен
+var domEl=document.getElementById('domainList');
+if(domEl){
+var html='';
+for(var k=0;k<DOMAIN_BUILDINGS.length;k++){
+var build=DOMAIN_BUILDINGS[k];
+var cnt=(state.domain[build.id]&&state.domain[build.id].count)||0;
+var can=state.xp>=build.price;
+html+='<div class="item">';
+html+='<div class="item-icon">'+build.icon+'</div>';
+html+='<div class="item-body">';
+html+='<div class="item-title">'+build.name+(cnt>0?' ×'+cnt:'')+'</div>';
+html+='<div class="item-desc">+'+build.income+' XP/день</div>';
+html+='<div class="item-xp">'+build.price+' XP</div>';
+html+='</div>';
+if(can) html+='<button class="item-btn" onclick="buildDomain(\''+build.id+'\')">Строить</button>';
+else html+='<button class="item-btn done" disabled>✖</button>';
+html+='</div>';
+}
+domEl.innerHTML=html;
+}
+
+// Достижения
+var achEl=document.getElementById('achList');
+if(achEl){
+var html2='';
+for(var m=0;m<ACHIEVEMENTS.length;m++){
+var a=ACHIEVEMENTS[m];
+var unlocked=state.achievements.indexOf(a.id)!==-1;
+html2+='<div class="ach-item '+(unlocked?'unlocked':'locked')+'"><div class="ach-item-icon">'+a.icon+'</div><div class="ach-item-name">'+a.name+'</div></div>';
+}
+achEl.innerHTML=html2;
+}
+
+// Карточки
+var cardsEl=document.getElementById('cardsList');
+if(cardsEl){
+var html3='';
+for(var n=0;n<COLL_CARDS.length;n++){
+var c=COLL_CARDS[n];
+var own=state.cards.indexOf(c.id)!==-1;
+html3+='<div class="item"><div class="item-icon">'+(own?c.icon:'❓')+'</div><div class="item-body"><div class="item-title">'+c.name+'</div><div class="item-desc">'+c.rarity+'</div></div></div>';
+}
+cardsEl.innerHTML=html3;
+}
+}
+
+function buildDomain(id){
+var b=null;
+for(var i=0;i<DOMAIN_BUILDINGS.length;i++) if(DOMAIN_BUILDINGS[i].id===id) b=DOMAIN_BUILDINGS[i];
+if(!b) return;
+if(state.xp<b.price){showToast('Недостаточно XP');return;}
+state.xp-=b.price;
+if(!state.domain[id]) state.domain[id]={count:0};
+state.domain[id].count++;
+saveState();
+updateUI();
+renderGame();
+showToast('🏗 '+b.name);
+}
+
+function openPetShop(){
+var html='<h2>🏪 Магазин питомцев</h2>';
+for(var i=0;i<PETS.length;i++){
+var p=PETS[i];
+var owned=state.pets.owned.indexOf(p.id)!==-1;
+var active=state.pets.active===p.id;
+html+='<div class="item">';
+html+='<div class="item-icon">'+p.icon+'</div>';
+html+='<div class="item-body">';
+html+='<div class="item-title">'+p.name+'</div>';
+html+='<div class="item-desc">'+p.desc+' · '+p.bonus+'</div>';
+html+='<div class="item-xp">'+p.price+' XP</div>';
+html+='</div>';
+if(owned){
+if(active) html+='<button class="item-btn done" disabled>✓</button>';
+else html+='<button class="item-btn" onclick="setPet(\''+p.id+'\')">Выбрать</button>';
+}else{
+html+='<button class="item-btn" onclick="buyPet(\''+p.id+'\')">Купить</button>';
+}
+html+='</div>';
+}
+html+='<button class="btn ghost" onclick="closeModal()">Закрыть</button>';
+openModal(html);
+}
+
+function buyPet(id){
+var p=null;
+for(var i=0;i<PETS.length;i++) if(PETS[i].id===id) p=PETS[i];
+if(!p) return;
+if(state.xp<p.price){showToast('Недостаточно XP');return;}
+state.xp-=p.price;
+state.pets.owned.push(id);
+state.pets.names[id]=p.name;
+saveState();
+updateUI();
+openPetShop();
+renderGame();
+showToast('🎉 '+p.name);
+}
+
+function setPet(id){
+state.pets.active=id;
+saveState();
+openPetShop();
+renderGame();
+showToast('✨ Питомец выбран');
+}
+
+function openProfile(){
+var p=state.profile;
+var html='<h2>👤 Профиль</h2>';
+html+='<input id="pName" placeholder="Имя" value="'+escapeHtml(p.name)+'" maxlength="30">';
+html+='<input id="pBirth" type="date" value="'+escapeHtml(p.birth)+'">';
+html+='<input id="pHeight" type="number" placeholder="Рост (см)" value="'+(p.height||'')+'">';
+html+='<input id="pWeight" type="number" step="0.1" placeholder="Вес (кг)" value="'+(p.weight||'')+'">';
+html+='<button class="btn" onclick="saveProfile()">💾 Сохранить</button>';
+html+='<button class="btn ghost" onclick="closeModal()">Закрыть</button>';
+openModal(html);
+}
+
+function saveProfile(){
+state.profile.name=document.getElementById('pName').value.trim();
+state.profile.birth=document.getElementById('pBirth').value;
+state.profile.height=parseFloat(document.getElementById('pHeight').value)||0;
+state.profile.weight=parseFloat(document.getElementById('pWeight').value)||0;
+saveState();
+closeModal();
+updateUI();
+showToast('✅ Сохранено');
+}
+
+console.log('✅ Часть 2 загружена');
+</script>
+<script>
+'use strict';
+
+/* ============ ПРАКТИКИ ============ */
+function getAllPractices(){
+return PRACTICES.concat(state.customPractices||[]);
+}
+
+function getPracState(id){
+if(!state.practices[id]) state.practices[id]={level:1,count:0,lastDone:0,todayCount:0,today:''};
+return state.practices[id];
+}
+
+function canDoPrac(id){
+var ps=getPracState(id);
+var today=getToday();
+if(ps.today!==today){ps.today=today;ps.todayCount=0;}
+if(ps.todayCount>=MAX_PRAC_DAY) return {ok:false,reason:'Максимум '+MAX_PRAC_DAY+' в день'};
+if(ps.lastDone){
+var h=(Date.now()-ps.lastDone)/3600000;
+if(h<COOLDOWN_H){
+var left=COOLDOWN_H-h;
+return {ok:false,reason:'Кулдаун '+Math.floor(left)+'ч '+Math.floor((left%1)*60)+'м'};
+}
+}
+return {ok:true};
+}
+
+function renderDevelop(){
+// Практики
+var el=document.getElementById('practList');
+if(el){
+var all=getAllPractices();
+var byCat={};
+for(var i=0;i<all.length;i++){
+var p=all[i];
+if(!byCat[p.cat]) byCat[p.cat]=[];
+byCat[p.cat].push(p);
+}
+var html='';
+for(var cat in byCat){
+html+='<div style="font-size:11px;font-weight:800;color:#6e6e88;letter-spacing:1.5px;text-transform:uppercase;margin:16px 0 8px">'+CAT_NAMES[cat]+'</div>';
+for(var j=0;j<byCat[cat].length;j++){
+var p=byCat[cat][j];
+var ps=getPracState(p.id);
+var check=canDoPrac(p.id);
+var tc=ps.todayCount||0;
+html+='<div class="item" style="'+(check.ok?'':'opacity:.6')+'">';
+html+='<div class="item-icon">'+p.icon+'</div>';
+html+='<div class="item-body">';
+html+='<div class="item-title">'+p.name+' <span style="font-size:10px;color:#6e6e88">Ур. '+ps.level+'</span></div>';
+html+='<div class="item-desc">'+p.desc+'</div>';
+html+='<div class="item-xp">+'+p.xp+' XP · '+tc+'/'+MAX_PRAC_DAY;
+if(!check.ok) html+=' · '+check.reason;
+html+='</div>';
+html+='</div>';
+if(check.ok) html+='<button class="item-btn" onclick="doPrac(\''+p.id+'\')">▶</button>';
+else html+='<button class="item-btn done" disabled>⏳</button>';
+html+='</div>';
+}
+}
+el.innerHTML=html;
+}
+
+// Квесты
+renderQuests();
+
+// Курсы
+renderCourses();
+
+// Аскезы
+renderAskesis();
+
+// Преграды
+renderBarriers();
+
+// Путь
+renderPath();
+}
+
+function doPrac(id){
+var all=getAllPractices();
+var p=null;
+for(var i=0;i<all.length;i++) if(all[i].id===id) p=all[i];
+if(!p) return;
+var check=canDoPrac(id);
+if(!check.ok){showToast('⏳ '+check.reason);return;}
+// Простой вариант: подтверждение без таймера
+if(!confirm('Выполнил «'+p.name+'»?')) return;
+var ps=getPracState(id);
+ps.count++;
+ps.todayCount=(ps.todayCount||0)+1;
+ps.lastDone=Date.now();
+var newLvl=Math.floor(ps.count/PRAC_LEVEL_EVERY)+1;
+if(newLvl>ps.level){ps.level=newLvl;showToast('🎉 '+p.name+' Ур. '+ps.level);}
+state.totalPractices++;
+saveState();
+addXP(p.xp,p.name);
+if(typeof hitBoss==='function') hitBoss(10);
+if(state.totalPractices>=1&&state.cards.indexOf('cc1')===-1) state.cards.push('cc1');
+if(state.totalPractices>=50&&state.cards.indexOf('cc4')===-1) state.cards.push('cc4');
+if(state.totalPractices>=100&&state.cards.indexOf('cc5')===-1) state.cards.push('cc5');
+saveState();
+renderDevelop();
+}
+
+/* ============ КВЕСТЫ ============ */
+function renderQuests(){
+var el=document.getElementById('questsList');
+if(!el) return;
+var today=getToday();
+if(state.quests.day!==today){
+var picked=[];
+var pool=QUESTS_POOL.slice();
+for(var i=0;i<3&&pool.length;i++){
+var idx=seedIndex(today+'q'+i,pool.length);
+picked.push(pool[idx]);
+pool.splice(idx,1);
+}
+state.quests={day:today,list:picked,done:[]};
+saveState();
+}
+var html='';
+for(var j=0;j<state.quests.list.length;j++){
+var q=state.quests.list[j];
+var done=state.quests.done.indexOf(q.id)!==-1;
+html+='<div class="item" style="'+(done?'opacity:.6':'')+'">';
+html+='<div class="item-icon">'+q.icon+'</div>';
+html+='<div class="item-body">';
+html+='<div class="item-title" style="'+(done?'text-decoration:line-through':'')+'">'+q.text+'</div>';
+html+='<div class="item-xp">+'+q.xp+' XP</div>';
+html+='</div>';
+if(done) html+='<button class="item-btn done" disabled>✓</button>';
+else html+='<button class="item-btn" onclick="doQuest(\''+q.id+'\')">✓</button>';
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function doQuest(id){
+if(state.quests.done.indexOf(id)!==-1) return;
+var q=null;
+for(var i=0;i<state.quests.list.length;i++) if(state.quests.list[i].id===id) q=state.quests.list[i];
+if(!q) return;
+state.quests.done.push(id);
+saveState();
+addXP(q.xp,'Квест');
+renderQuests();
+}
+
+/* ============ КУРСЫ ============ */
+function renderCourses(){
+var el=document.getElementById('coursesList');
+if(!el) return;
+var html='';
+for(var i=0;i<COURSES.length;i++){
+var c=COURSES[i];
+var st=state.courses[c.id];
+var active=st&&st.active;
+var day=st?st.day:0;
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;gap:10px;align-items:center">';
+html+='<div style="font-size:32px">'+c.icon+'</div>';
+html+='<div style="flex:1">';
+html+='<div style="font-size:14px;font-weight:900">'+c.name+'</div>';
+html+='<div style="font-size:11px;color:#a8a8bd">'+c.desc+'</div>';
+if(active){
+html+='<div class="pbar" style="height:5px;margin-top:6px"><div class="pbar-fill" style="width:'+((day/c.days)*100)+'%"></div></div>';
+html+='<div style="font-size:10px;color:#6e6e88;margin-top:4px">День '+day+' из '+c.days+'</div>';
+}
+html+='</div>';
+html+='</div>';
+if(!active){
+html+='<button class="btn small" style="width:100%;margin-top:10px" onclick="startCourse(\''+c.id+'\')">▶ Начать</button>';
+}else{
+html+='<button class="btn small" style="width:100%;margin-top:10px" onclick="markCourse(\''+c.id+'\')">✅ Отметить день</button>';
+}
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function startCourse(id){
+var c=null;
+for(var i=0;i<COURSES.length;i++) if(COURSES[i].id===id) c=COURSES[i];
+if(!c) return;
+state.courses[id]={day:0,active:true,lastMark:''};
+saveState();
+renderCourses();
+showToast('🎓 '+c.name);
+}
+
+function markCourse(id){
+var c=null;
+for(var i=0;i<COURSES.length;i++) if(COURSES[i].id===id) c=COURSES[i];
+if(!c) return;
+var st=state.courses[id];
+if(!st||!st.active) return;
+var today=getToday();
+if(st.lastMark===today){showToast('Уже');return;}
+st.lastMark=today;
+st.day++;
+addXP(c.xp,'Курс: '+c.name);
+if(st.day>=c.days){
+st.active=false;
+addXP(200,'Курс пройден');
+showToast('🏆 '+c.name+'!');
+}else{
+showToast('✅ День '+st.day);
+}
+saveState();
+renderCourses();
+}
+
+/* ============ АСКЕЗЫ ============ */
+function renderAskesis(){
+var el=document.getElementById('askesisList');
+if(!el) return;
+var html='';
+for(var i=0;i<ASKESIS.length;i++){
+var a=ASKESIS[i];
+var st=state.askesis[a.id];
+var active=st&&st.active;
+var day=st?st.day:0;
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;gap:10px;align-items:center">';
+html+='<div style="font-size:32px">'+a.icon+'</div>';
+html+='<div style="flex:1">';
+html+='<div style="font-size:14px;font-weight:900">'+a.name+'</div>';
+html+='<div style="font-size:11px;color:#a8a8bd">'+a.desc+' · '+a.days+' дней · +'+a.xp+' XP</div>';
+if(active){
+html+='<div class="pbar" style="height:5px;margin-top:6px"><div class="pbar-fill" style="width:'+((day/a.days)*100)+'%"></div></div>';
+html+='<div style="font-size:10px;color:#6e6e88;margin-top:4px">День '+day+' из '+a.days+'</div>';
+}
+html+='</div>';
+html+='</div>';
+if(!active){
+html+='<button class="btn small" style="width:100%;margin-top:10px" onclick="startAskesis(\''+a.id+'\')">▶ Начать</button>';
+}else{
+html+='<button class="btn small" style="width:100%;margin-top:10px" onclick="markAskesis(\''+a.id+'\')">✅ Отметить день</button>';
+}
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function startAskesis(id){
+var a=null;
+for(var i=0;i<ASKESIS.length;i++) if(ASKESIS[i].id===id) a=ASKESIS[i];
+if(!a) return;
+state.askesis[id]={day:0,active:true,lastMark:''};
+saveState();
+renderAskesis();
+showToast('🔥 '+a.name);
+}
+
+function markAskesis(id){
+var a=null;
+for(var i=0;i<ASKESIS.length;i++) if(ASKESIS[i].id===id) a=ASKESIS[i];
+if(!a) return;
+var st=state.askesis[id];
+if(!st||!st.active) return;
+var today=getToday();
+if(st.lastMark===today){showToast('Уже');return;}
+st.lastMark=today;
+st.day++;
+addXP(50,'Аскеза');
+if(typeof hitBoss==='function') hitBoss(50);
+if(st.day>=a.days){
+st.active=false;
+addXP(a.xp,'Аскеза пройдена');
+showToast('🏆 '+a.name+'!');
+}else{
+showToast('✅ День '+st.day);
+}
+saveState();
+renderAskesis();
+}
+
+/* ============ ПРЕГРАДЫ ============ */
+function renderBarriers(){
+var el=document.getElementById('barriersList');
+if(!el) return;
+var today=getToday();
+var html='';
+for(var i=0;i<BARRIERS.length;i++){
+var b=BARRIERS[i];
+var st=state.barriers[b.id]||{count:0,lastMark:''};
+var marked=st.lastMark===today;
+html+='<div class="item">';
+html+='<div class="item-icon">'+b.icon+'</div>';
+html+='<div class="item-body">';
+html+='<div class="item-title">'+b.name+'</div>';
+html+='<div class="item-desc">'+b.desc+'</div>';
+html+='<div class="item-xp">+'+b.xp+' XP · 30 урона'+(st.count?' · ×'+st.count:'')+'</div>';
+html+='</div>';
+if(marked) html+='<button class="item-btn done" disabled>✓</button>';
+else html+='<button class="item-btn" onclick="doBarrier(\''+b.id+'\')">✓</button>';
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function doBarrier(id){
+var b=null;
+for(var i=0;i<BARRIERS.length;i++) if(BARRIERS[i].id===id) b=BARRIERS[i];
+if(!b) return;
+var today=getToday();
+if(!state.barriers[id]) state.barriers[id]={count:0,lastMark:''};
+if(state.barriers[id].lastMark===today){showToast('Уже');return;}
+state.barriers[id].lastMark=today;
+state.barriers[id].count++;
+saveState();
+addXP(b.xp,'Преграда: '+b.name);
+if(typeof hitBoss==='function') hitBoss(30);
+renderBarriers();
+}
+
+/* ============ ПУТЬ ============ */
+var PATH_STEPS=[
+{name:'Осознание',icon:'👁️',need:3},
+{name:'Принятие',icon:'🤲',need:7},
+{name:'Дисциплина',icon:'⚔️',need:14},
+{name:'Очищение',icon:'🌊',need:21},
+{name:'Сила',icon:'🦁',need:30},
+{name:'Мудрость',icon:'🦉',need:45},
+{name:'Просветление',icon:'🕉️',need:60}
+];
+
+function renderPath(){
+var el=document.getElementById('pathBox');
+if(!el) return;
+var step=state.pathStep||0;
+var prog=state.pathProgress||0;
+var cur=PATH_STEPS[step];
+if(!cur){
+el.innerHTML='<div class="card primary" style="text-align:center;padding:30px"><div style="font-size:70px">🕉️</div><div style="font-size:20px;font-weight:900;margin-top:10px">Путь пройден</div></div>';
+return;
+}
+var html='<div class="card primary" style="text-align:center">';
+html+='<div style="font-size:60px">'+cur.icon+'</div>';
+html+='<div style="font-size:20px;font-weight:900;margin:8px 0">'+cur.name+'</div>';
+html+='<div class="pbar"><div class="pbar-fill" style="width:'+Math.min(100,(prog/cur.need)*100)+'%"></div></div>';
+html+='<div style="font-size:11px;color:#6e6e88;font-weight:700">'+prog+' / '+cur.need+'</div>';
+html+='<button class="btn" style="margin-top:14px" onclick="advancePath()">📈 Прогресс</button>';
+html+='</div>';
+el.innerHTML=html;
+}
+
+function advancePath(){
+var step=state.pathStep||0;
+var cur=PATH_STEPS[step];
+if(!cur) return;
+state.pathProgress=(state.pathProgress||0)+1;
+if(state.pathProgress>=cur.need){
+state.pathStep=step+1;
+state.pathProgress=0;
+addXP(200,'Ступень: '+cur.name);
+showToast('🌌 Новая ступень!');
+}
+saveState();
+renderPath();
+}
+
+/* ============ ТРЕКЕРЫ ============ */
+function renderTrack(){
+// Привычки
+var el=document.getElementById('habitsList');
+if(el){
+var html='';
+var today=new Date();
+for(var i=0;i<HABITS.length;i++){
+var h=HABITS[i];
+var days=state.habits[h.id]||{};
+html+='<div class="card" style="padding:12px">';
+html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">';
+html+='<div style="font-size:22px">'+h.icon+'</div>';
+html+='<div style="flex:1;font-size:13px;font-weight:800">'+h.name+'</div>';
+html+='</div>';
+html+='<div style="display:grid;grid-template-columns:repeat(14,1fr);gap:3px">';
+for(var d=13;d>=0;d--){
+var dt=new Date(today);
+dt.setDate(dt.getDate()-d);
+var key=dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+var on=days[key];
+var isToday=d===0;
+html+='<div onclick="toggleHabit(\''+h.id+'\',\''+key+'\')" style="aspect-ratio:1;border-radius:4px;cursor:pointer;background:'+(on?'linear-gradient(135deg,#4facfe,#b06bff)':'rgba(255,255,255,.06)')+';border:1px solid '+(isToday?'#4facfe':'transparent')+'"></div>';
+}
+html+='</div></div>';
+}
+el.innerHTML=html;
+}
+
+// Настроение
+renderMood();
+
+// Вес
+renderWeight();
+
+// Финансы
+renderFinance();
+
+// Цели
+renderGoals();
+}
+
+function toggleHabit(id,key){
+if(!state.habits[id]) state.habits[id]={};
+if(state.habits[id][key]){
+delete state.habits[id][key];
+}else{
+state.habits[id][key]=true;
+if(key===getToday()) addXP(5,'Привычка');
+}
+saveState();
+renderTrack();
+}
+
+/* ============ НАСТРОЕНИЕ ============ */
+var MOOD_EMO=['😭','😔','😐','🙂','😄'];
+var MOOD_COLORS=['#ff3b5c','#ff8c42','#ffd166','#4cd964','#00c6ff'];
+
+function renderMood(){
+var el=document.getElementById('moodCalendar');
+if(!el) return;
+var now=new Date();
+var year=now.getFullYear();
+var month=now.getMonth();
+var days=new Date(year,month+1,0).getDate();
+var first=new Date(year,month,1).getDay();
+var off=(first+6)%7;
+var html='<div class="card" style="padding:12px">';
+html+='<div style="font-size:12px;font-weight:800;text-align:center;margin-bottom:10px">'+['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][month]+' '+year+'</div>';
+html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center;font-size:9px;color:#6e6e88;font-weight:800;margin-bottom:4px">';
+var wd=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
+for(var i=0;i<7;i++) html+='<div>'+wd[i]+'</div>';
+html+='</div>';
+html+='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px">';
+for(var k=0;k<off;k++) html+='<div></div>';
+for(var d=1;d<=days;d++){
+var key=year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+var m=state.mood[key];
+var bg=m?MOOD_COLORS[m-1]:'rgba(255,255,255,.06)';
+var isT=key===getToday();
+html+='<div onclick="pickMood(\''+key+'\')" style="aspect-ratio:1;border-radius:6px;cursor:pointer;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:'+(m?'#fff':'#6e6e88')+';border:1px solid '+(isT?'#4facfe':'transparent')+'">'+(m?MOOD_EMO[m-1]:d)+'</div>';
+}
+html+='</div></div>';
+el.innerHTML=html;
+}
+
+function pickMood(key){
+var html='<h2>😊 Настроение</h2>';
+html+='<div style="font-size:12px;color:#6e6e88;margin-bottom:12px">'+key+'</div>';
+html+='<div style="display:flex;gap:8px;justify-content:center;margin-bottom:16px">';
+var ex=state.mood[key];
+for(var i=0;i<5;i++){
+var active=(ex===i+1);
+html+='<button onclick="setMood(\''+key+'\','+(i+1)+')" style="font-size:34px;padding:6px;border-radius:12px;background:'+(active?MOOD_COLORS[i]:'rgba(255,255,255,.05)')+';border:2px solid '+(active?MOOD_COLORS[i]:'rgba(255,255,255,.1)')+';cursor:pointer">'+MOOD_EMO[i]+'</button>';
+}
+html+='</div>';
+html+='<button class="btn ghost" onclick="closeModal()">Закрыть</button>';
+openModal(html);
+}
+
+function setMood(key,val){
+state.mood[key]=val;
+saveState();
+closeModal();
+if(key===getToday()) addXP(10,'Настроение');
+renderMood();
+}
+
+/* ============ ВЕС ============ */
+function renderWeight(){
+var el=document.getElementById('weightBox');
+if(!el) return;
+var weights=state.weight||[];
+var html='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;gap:8px">';
+html+='<input id="wInput" type="number" step="0.1" placeholder="Вес (кг)" style="margin:0">';
+html+='<button class="item-btn" onclick="addWeight()" style="padding:12px 14px">➕</button>';
+html+='</div></div>';
+if(weights.length){
+var last=weights[weights.length-1];
+html+='<div class="card" style="padding:14px"><div style="font-size:11px;color:#6e6e88;font-weight:800;text-transform:uppercase">Сейчас</div><div style="font-size:26px;font-weight:900">'+last.kg+' кг</div><div style="font-size:11px;color:#6e6e88;margin-top:4px">'+last.date+'</div></div>';
+var recent=weights.slice(-7).reverse();
+html+='<div class="card" style="padding:12px"><div style="font-size:12px;font-weight:800;margin-bottom:8px">История</div>';
+for(var i=0;i<recent.length;i++){
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px"><span style="color:#6e6e88">'+recent[i].date+'</span><span style="font-weight:800">'+recent[i].kg+' кг</span></div>';
+}
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function addWeight(){
+var inp=document.getElementById('wInput');
+if(!inp) return;
+var v=parseFloat(inp.value);
+if(!v||v<20||v>400){showToast('Введи корректный вес');return;}
+var today=getToday();
+if(!state.weight) state.weight=[];
+var ex=null;
+for(var i=0;i<state.weight.length;i++) if(state.weight[i].date===today) ex=state.weight[i];
+if(ex) ex.kg=v;
+else state.weight.push({date:today,kg:v});
+state.profile.weight=v;
+saveState();
+addXP(5,'Вес');
+renderWeight();
+}
+
+/* ============ ФИНАНСЫ ============ */
+function renderFinance(){
+var el=document.getElementById('financeBox');
+if(!el) return;
+var savings=state.finance.savings||[];
+var html='<button class="btn" onclick="addSavings()" style="margin-bottom:12px">➕ Новая копилка</button>';
+if(!savings.length){
+html+='<div class="card"><div class="info-text">Копилок пока нет.</div></div>';
+}else{
+for(var i=0;i<savings.length;i++){
+var s=savings[i];
+var pct=s.target>0?(s.current/s.target)*100:0;
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:14px;font-weight:900">🏦 '+escapeHtml(s.name)+'</div><button class="item-btn done" onclick="delSavings('+i+')" style="padding:4px 10px">✖</button></div>';
+html+='<div class="pbar"><div class="pbar-fill" style="width:'+pct+'%"></div></div>';
+html+='<div style="display:flex;justify-content:space-between;font-size:11px;color:#6e6e88;font-weight:800;margin:6px 0 10px"><span>'+s.current+' ₽</span><span>'+s.target+' ₽</span></div>';
+html+='<div style="display:flex;gap:6px"><input id="sav_'+i+'" type="number" placeholder="Сумма" style="margin:0;flex:1"><button class="item-btn" onclick="addToSaving('+i+')" style="padding:12px 14px">💰</button></div>';
+html+='</div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addSavings(){
+var html='<h2>🏦 Новая копилка</h2>';
+html+='<input id="sName" placeholder="Название" maxlength="30">';
+html+='<input id="sTarget" type="number" placeholder="Цель (₽)">';
+html+='<button class="btn" onclick="createSavings()">✅ Создать</button>';
+html+='<button class="btn ghost" onclick="closeModal()">Отмена</button>';
+openModal(html);
+}
+
+function createSavings(){
+var name=document.getElementById('sName').value.trim();
+var target=parseFloat(document.getElementById('sTarget').value)||0;
+if(!name){showToast('Введи название');return;}
+if(!state.finance.savings) state.finance.savings=[];
+state.finance.savings.push({name:name.slice(0,30),target:target,current:0});
+saveState();
+closeModal();
+renderFinance();
+showToast('🏦 Создано');
+}
+
+function addToSaving(idx){
+var inp=document.getElementById('sav_'+idx);
+if(!inp) return;
+var v=parseFloat(inp.value);
+if(!v) return;
+state.finance.savings[idx].current+=v;
+inp.value='';
+saveState();
+addXP(5,'В копилку');
+renderFinance();
+}
+
+function delSavings(idx){
+if(!confirm('Удалить?')) return;
+state.finance.savings.splice(idx,1);
+saveState();
+renderFinance();
+}
+
+/* ============ ЦЕЛИ ============ */
+function renderGoals(){
+var el=document.getElementById('goalsBox');
+if(!el) return;
+var goals=state.goals||[];
+if(!goals.length){
+el.innerHTML='<div class="card"><div class="info-text">Пока целей нет.</div></div>';
+return;
+}
+var html='';
+for(var i=0;i<goals.length;i++){
+var g=goals[i];
+var dc=0;
+for(var j=0;j<g.steps.length;j++) if(g.steps[j].done) dc++;
+var pct=g.steps.length?(dc/g.steps.length)*100:0;
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><div style="font-size:14px;font-weight:900">🎯 '+escapeHtml(g.name)+'</div><button class="item-btn done" onclick="delGoal('+i+')" style="padding:4px 10px">✖</button></div>';
+html+='<div class="pbar"><div class="pbar-fill" style="width:'+pct+'%"></div></div>';
+html+='<div style="font-size:11px;color:#6e6e88;font-weight:800;margin:6px 0 10px">'+dc+' / '+g.steps.length+' шагов</div>';
+for(var k=0;k<g.steps.length;k++){
+var s=g.steps[k];
+html+='<div style="display:flex;gap:8px;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.05)"><div onclick="toggleStep('+i+','+k+')" style="cursor:pointer;font-size:16px">'+(s.done?'✅':'○')+'</div><div style="flex:1;font-size:12px;font-weight:'+(s.done?'600':'700')+';'+(s.done?'opacity:.5;text-decoration:line-through':'')+'">'+escapeHtml(s.text)+'</div></div>';
+}
+html+='<div style="display:flex;gap:6px;margin-top:10px"><input id="step_'+i+'" placeholder="Новый шаг" style="margin:0;flex:1"><button class="item-btn" onclick="addStep('+i+')" style="padding:12px 14px">➕</button></div>';
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function addGoal(){
+var inp=document.getElementById('goalInput');
+if(!inp) return;
+var v=inp.value.trim();
+if(!v){showToast('Введи название');return;}
+if(!state.goals) state.goals=[];
+state.goals.push({name:v.slice(0,60),steps:[],created:Date.now()});
+inp.value='';
+saveState();
+addXP(20,'Цель');
+renderGoals();
+}
+
+function delGoal(idx){
+if(!confirm('Удалить?')) return;
+state.goals.splice(idx,1);
+saveState();
+renderGoals();
+}
+
+function addStep(idx){
+var inp=document.getElementById('step_'+idx);
+if(!inp) return;
+var v=inp.value.trim();
+if(!v) return;
+state.goals[idx].steps.push({text:v.slice(0,100),done:false});
+inp.value='';
+saveState();
+renderGoals();
+}
+
+function toggleStep(gi,si){
+state.goals[gi].steps[si].done=!state.goals[gi].steps[si].done;
+saveState();
+if(state.goals[gi].steps[si].done){
+addXP(10,'Шаг');
+}
+renderGoals();
+}
+
+console.log('✅ Часть 3 загружена');
+</script>
+<script>
+'use strict';
+
+/* ============ ЭЗОТЕРИКА ============ */
+function renderEso(){
+var today=getToday();
+
+// Руна
+if(state.rune.day!==today){
+state.rune={day:today,idx:seedIndex(today+'rune',RUNES.length)};
+saveState();
+}
+var e=document.getElementById('runeIcon');
+if(e) e.textContent=RUNES[state.rune.idx].icon;
+e=document.getElementById('runeName');
+if(e) e.textContent=RUNES[state.rune.idx].name;
+e=document.getElementById('runeMean');
+if(e) e.textContent=RUNES[state.rune.idx].mean;
+
+// Камень
+if(state.stone.day!==today){
+state.stone={day:today,idx:seedIndex(today+'stone',STONES.length)};
+saveState();
+}
+e=document.getElementById('stoneIcon');
+if(e) e.textContent=STONES[state.stone.idx].icon;
+e=document.getElementById('stoneName');
+if(e) e.textContent=STONES[state.stone.idx].name;
+e=document.getElementById('stoneProps');
+if(e) e.textContent=STONES[state.stone.idx].props;
+
+// Луна
+var now=new Date();
+var known=new Date('2000-01-06T18:14:00Z').getTime();
+var cycle=29.530588853;
+var phase=((now.getTime()-known)/86400000%cycle+cycle)%cycle;
+var moonIdx=Math.floor((phase/cycle)*8)%8;
+e=document.getElementById('moonIcon');
+if(e) e.textContent=MOON_PHASES[moonIdx].icon;
+e=document.getElementById('moonName');
+if(e) e.textContent=MOON_PHASES[moonIdx].name;
+e=document.getElementById('moonEffect');
+if(e) e.textContent=MOON_PHASES[moonIdx].effect;
+
+// Цвет
+var wd=new Date().getDay();
+var col=WEEKDAY[wd];
+e=document.getElementById('colorCircle');
+if(e) e.style.background=col.hex;
+e=document.getElementById('colorName');
+if(e) e.textContent=col.name;
+e=document.getElementById('colorPlanet');
+if(e) e.textContent='🪐 '+col.planet;
+
+// Гороскоп
+renderZodiac();
+}
+
+function renderZodiac(){
+var el=document.getElementById('zodiacBox');
+if(!el) return;
+var birth=state.profile.birth;
+if(!birth){
+el.innerHTML='<div class="info-text">Дата рождения не заполнена. Нажми на аватар в шапке.</div>';
+return;
+}
+var d=new Date(birth);
+var m=d.getMonth()+1;
+var day=d.getDate();
+var sign=null;
+for(var i=0;i<ZODIAC.length;i++){
+var z=ZODIAC[i];
+var prevEnd=ZODIAC[(i+11)%12].end;
+var startM=prevEnd[0];
+var startD=prevEnd[1]+1;
+if(startM<=12){
+if((m===startM&&day>=startD)||(m===z.end[0]&&day<=z.end[1])){sign=z;break;}
+if(startM>z.end[0]){
+if((m===startM&&day>=startD)||(m<z.end[0])||(m===z.end[0]&&day<=z.end[1])){sign=z;break;}
+}
+}
+}
+if(!sign) sign=ZODIAC[0];
+el.innerHTML='<div style="text-align:center"><div style="font-size:60px">'+sign.icon+'</div><div style="font-size:18px;font-weight:900;margin-top:8px">'+sign.name+'</div><div style="margin-top:10px"><span class="tag blue">'+sign.element+'</span><span class="tag purple">'+sign.planet+'</span></div></div>';
+}
+
+function askBall(){
+var e=document.getElementById('ballAnswer');
+if(!e) return;
+e.textContent='...';
+setTimeout(function(){
+var a=BALL_ANSWERS[Math.floor(Math.random()*BALL_ANSWERS.length)];
+e.textContent=a.icon+' '+a.text;
+},700);
+}
+
+/* ============ ПРИРОДА ============ */
+function renderNature(){
+renderGarden();
+renderBees();
+renderMushrooms();
+renderHerbs();
+}
+
+/* Сад */
+function renderGarden(){
+var el=document.getElementById('gardenList');
+if(!el) return;
+var plants=state.garden||[];
+var html='<button class="btn" onclick="addPlant()" style="margin-bottom:12px">🌱 Новая посадка</button>';
+if(!plants.length){
+html+='<div class="card"><div class="info-text">Пока ничего не посажено.</div></div>';
+}else{
+for(var i=0;i<plants.length;i++){
+var p=plants[i];
+var c=null;
+for(var j=0;j<GARDEN_CULTURES.length;j++) if(GARDEN_CULTURES[j].id===p.cultureId) c=GARDEN_CULTURES[j];
+if(!c) continue;
+var planted=new Date(p.date+'T00:00:00');
+var dp=Math.floor((Date.now()-planted.getTime())/86400000);
+var left=Math.max(0,c.days-dp);
+var pct=Math.min(100,(dp/c.days)*100);
+var ready=left===0;
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;gap:10px;align-items:center">';
+html+='<div style="font-size:32px">'+c.icon+'</div>';
+html+='<div style="flex:1">';
+html+='<div style="font-size:14px;font-weight:900">'+c.name+'</div>';
+html+='<div style="font-size:11px;color:#a8a8bd">'+p.date+' · '+dp+' дней</div>';
+html+='<div class="pbar" style="height:5px;margin-top:6px"><div class="pbar-fill" style="width:'+pct+'%"></div></div>';
+html+='<div style="font-size:11px;font-weight:800;color:'+(ready?'#ffd166':'#4facfe')+';margin-top:4px">'+(ready?'🌾 Готово!':'⏳ '+left+' дн.')+'</div>';
+html+='</div>';
+html+='<button class="item-btn done" onclick="delPlant('+i+')" style="padding:6px 10px">✖</button>';
+html+='</div></div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addPlant(){
+var html='<h2>🌱 Новая посадка</h2>';
+html+='<select id="plCult">';
+var cm=new Date().getMonth()+1;
+for(var i=0;i<GARDEN_CULTURES.length;i++){
+var c=GARDEN_CULTURES[i];
+var inS=c.sow.indexOf(cm)!==-1;
+html+='<option value="'+c.id+'">'+c.icon+' '+c.name+(inS?' ✅ сезон':'')+' ('+c.days+' дн.)</option>';
+}
+html+='</select>';
+html+='<input type="date" id="plDate" value="'+getToday()+'">';
+html+='<button class="btn" onclick="createPlant()">✅ Посадить</button>';
+html+='<button class="btn ghost" onclick="closeModal()">Отмена</button>';
+openModal(html);
+}
+
+function createPlant(){
+var cid=document.getElementById('plCult').value;
+var date=document.getElementById('plDate').value||getToday();
+var c=null;
+for(var i=0;i<GARDEN_CULTURES.length;i++) if(GARDEN_CULTURES[i].id===cid) c=GARDEN_CULTURES[i];
+if(!c) return;
+if(!state.garden) state.garden=[];
+state.garden.push({cultureId:cid,date:date});
+saveState();
+closeModal();
+addXP(15,'Посажено: '+c.name);
+renderGarden();
+}
+
+function delPlant(idx){
+if(!confirm('Удалить?')) return;
+state.garden.splice(idx,1);
+saveState();
+renderGarden();
+}
+
+/* Пасека */
+function renderBees(){
+var el=document.getElementById('beesBox');
+if(!el) return;
+var hives=state.bees.hives||[];
+var cm=new Date().getMonth()+1;
+var html='<div class="card primary" style="padding:12px;margin-bottom:12px">';
+html+='<div style="font-size:11px;font-weight:800;color:#6e6e88;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">🌼 Сейчас цветёт</div>';
+var found=0;
+for(var i=0;i<HONEY_PLANTS.length;i++){
+var p=HONEY_PLANTS[i];
+if(p.month.indexOf(cm)!==-1){
+html+='<div style="display:flex;gap:8px;align-items:center;padding:4px 0"><div style="font-size:18px">'+p.icon+'</div><div style="flex:1;font-size:12px;font-weight:700">'+p.name+'</div><div style="font-size:10px;color:#4cd964;font-weight:800">'+p.honey+'</div></div>';
+found++;
+}
+}
+if(!found) html+='<div class="info-text">Нет медоносов</div>';
+html+='</div>';
+html+='<button class="btn" onclick="addHive()" style="margin-bottom:12px">🐝 Новый улей</button>';
+if(!hives.length){
+html+='<div class="card"><div class="info-text">Ульев пока нет.</div></div>';
+}else{
+for(var j=0;j<hives.length;j++){
+var h=hives[j];
+html+='<div class="item"><div class="item-icon">🐝</div><div class="item-body"><div class="item-title">'+escapeHtml(h.name)+'</div><div class="item-desc">'+h.date+'</div></div><button class="item-btn done" onclick="delHive('+j+')" style="padding:6px 10px">✖</button></div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addHive(){
+var html='<h2>🐝 Новый улей</h2>';
+html+='<input id="hvName" placeholder="Улей №1" maxlength="30">';
+html+='<input type="date" id="hvDate" value="'+getToday()+'">';
+html+='<button class="btn" onclick="createHive()">✅ Создать</button>';
+html+='<button class="btn ghost" onclick="closeModal()">Отмена</button>';
+openModal(html);
+}
+
+function createHive(){
+var name=document.getElementById('hvName').value.trim();
+var date=document.getElementById('hvDate').value||getToday();
+if(!name){showToast('Введи название');return;}
+if(!state.bees) state.bees={hives:[]};
+if(!state.bees.hives) state.bees.hives=[];
+state.bees.hives.push({name:name.slice(0,30),date:date});
+saveState();
+closeModal();
+addXP(20,'Улей');
+renderBees();
+}
+
+function delHive(idx){
+if(!confirm('Удалить?')) return;
+state.bees.hives.splice(idx,1);
+saveState();
+renderBees();
+}
+
+/* Грибница */
+function renderMushrooms(){
+var el=document.getElementById('mushroomsBox');
+if(!el) return;
+var batches=state.mushrooms||[];
+var html='<button class="btn" onclick="addMushroom()" style="margin-bottom:12px">🍄 Новая грибница</button>';
+if(!batches.length){
+html+='<div class="card"><div class="info-text">Грибниц пока нет.</div></div>';
+}else{
+for(var i=0;i<batches.length;i++){
+var b=batches[i];
+var sp=null;
+for(var j=0;j<MUSHROOMS.length;j++) if(MUSHROOMS[j].id===b.speciesId) sp=MUSHROOMS[j];
+if(!sp) continue;
+var planted=new Date(b.date+'T00:00:00');
+var dp=Math.floor((Date.now()-planted.getTime())/86400000);
+var left=Math.max(0,sp.days-dp);
+var pct=Math.min(100,(dp/sp.days)*100);
+var ready=left===0;
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;gap:10px;align-items:center">';
+html+='<div style="font-size:32px">'+sp.icon+'</div>';
+html+='<div style="flex:1">';
+html+='<div style="font-size:14px;font-weight:900">'+sp.name+'</div>';
+html+='<div style="font-size:11px;color:#a8a8bd">'+b.date+'</div>';
+html+='<div class="pbar" style="height:5px;margin-top:6px"><div class="pbar-fill" style="width:'+pct+'%"></div></div>';
+html+='<div style="font-size:11px;font-weight:800;color:'+(ready?'#ffd166':'#4facfe')+';margin-top:4px">'+(ready?'🍄 Готово!':'⏳ '+left+' дн.')+'</div>';
+html+='</div>';
+html+='<button class="item-btn done" onclick="delMushroom('+i+')" style="padding:6px 10px">✖</button>';
+html+='</div>';
+if(ready){
+html+='<button class="btn" style="margin-top:10px" onclick="harvestMushroom('+i+')">🍄 Собрать</button>';
+}
+html+='</div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addMushroom(){
+var html='<h2>🍄 Новая грибница</h2>';
+html+='<select id="msSpec">';
+for(var i=0;i<MUSHROOMS.length;i++){
+var m=MUSHROOMS[i];
+html+='<option value="'+m.id+'">'+m.icon+' '+m.name+' ('+m.days+' дн.)</option>';
+}
+html+='</select>';
+html+='<input type="date" id="msDate" value="'+getToday()+'">';
+html+='<button class="btn" onclick="createMushroom()">✅ Создать</button>';
+html+='<button class="btn ghost" onclick="closeModal()">Отмена</button>';
+openModal(html);
+}
+
+function createMushroom(){
+var sid=document.getElementById('msSpec').value;
+var date=document.getElementById('msDate').value||getToday();
+var sp=null;
+for(var i=0;i<MUSHROOMS.length;i++) if(MUSHROOMS[i].id===sid) sp=MUSHROOMS[i];
+if(!sp) return;
+if(!state.mushrooms) state.mushrooms=[];
+state.mushrooms.push({speciesId:sid,date:date});
+saveState();
+closeModal();
+addXP(20,'Грибница');
+renderMushrooms();
+}
+
+function delMushroom(idx){
+if(!confirm('Удалить?')) return;
+state.mushrooms.splice(idx,1);
+saveState();
+renderMushrooms();
+}
+
+function harvestMushroom(idx){
+addXP(80,'Урожай грибов');
+state.mushrooms.splice(idx,1);
+saveState();
+renderMushrooms();
+showToast('🍄 Собрано!');
+}
+
+/* Травы */
+function renderHerbs(){
+var el=document.getElementById('herbsList');
+if(!el) return;
+var cm=new Date().getMonth()+1;
+var monthsMap={'Июнь-август':[6,7,8],'Июнь-сентябрь':[6,7,8,9],'Июнь-июль':[6,7],'Июль-август':[7,8],'Май-сентябрь':[5,6,7,8,9],'Апрель-май':[4,5]};
+var html='<div class="card primary" style="padding:12px;margin-bottom:12px">';
+html+='<div style="font-size:11px;font-weight:800;color:#6e6e88;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">🌿 Сейчас можно собрать</div>';
+var found=0;
+for(var i=0;i<HERBS.length;i++){
+var h=HERBS[i];
+var m=monthsMap[h.time]||[];
+if(m.indexOf(cm)!==-1){
+html+='<span class="tag green">'+h.icon+' '+h.name+'</span>';
+found++;
+}
+}
+if(!found) html+='<div class="info-text">Не сезон сбора</div>';
+html+='</div>';
+for(var j=0;j<HERBS.length;j++){
+var herb=HERBS[j];
+html+='<div class="item"><div class="item-icon">'+herb.icon+'</div><div class="item-body"><div class="item-title">'+herb.name+'</div><div class="item-desc">'+herb.time+' · '+herb.props+'</div></div></div>';
+}
+el.innerHTML=html;
+}
+
+/* ============ ЗНАНИЯ ============ */
+function renderKnow(){
+renderBooks();
+renderKnowledge();
+renderHealth();
+renderEsoKb();
+}
+
+function renderBooks(){
+var el=document.getElementById('booksList');
+if(!el) return;
+var html='';
+for(var i=0;i<BOOKS.length;i++){
+var b=BOOKS[i];
+var read=state.booksRead.indexOf(b.id)!==-1;
+html+='<div class="item" onclick="openBook(\''+b.id+'\')" style="cursor:pointer">';
+html+='<div class="item-icon">'+(read?'✅':'📖')+'</div>';
+html+='<div class="item-body"><div class="item-title">'+b.title+'</div><div class="item-desc">'+b.author+'</div></div>';
+html+='</div>';
+}
+el.innerHTML=html;
+}
+
+function openBook(id){
+var b=null;
+for(var i=0;i<BOOKS.length;i++) if(BOOKS[i].id===id) b=BOOKS[i];
+if(!b) return;
+var isRead=state.booksRead.indexOf(id)!==-1;
+var html='<h2>📖 '+b.title+'</h2>';
+html+='<div style="font-size:12px;color:#6e6e88;font-weight:700;margin-bottom:12px">'+b.author+'</div>';
+html+='<div style="font-size:13px;color:#a8a8bd;line-height:1.6;margin-bottom:16px">'+b.summary+'</div>';
+html+='<div style="font-size:11px;font-weight:800;color:#6e6e88;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px">💡 Советы</div>';
+for(var j=0;j<b.tips.length;j++){
+html+='<div style="display:flex;gap:8px;padding:5px 0"><div style="color:#4cd964;font-weight:900">✓</div><div style="font-size:12px;font-weight:600">'+b.tips[j]+'</div></div>';
+}
+if(!isRead){
+html+='<button class="btn" style="margin-top:16px" onclick="markBookRead(\''+id+'\')">✅ Отметить прочитанной (+30 XP)</button>';
+}
+html+='<button class="btn ghost" onclick="closeModal()">Закрыть</button>';
+openModal(html);
+}
+
+function markBookRead(id){
+if(state.booksRead.indexOf(id)!==-1) return;
+state.booksRead.push(id);
+saveState();
+addXP(30,'Книга');
+closeModal();
+renderBooks();
+}
+
+function renderKnowledge(){
+var el=document.getElementById('knowledgeList');
+if(!el) return;
+var byCat={};
+for(var i=0;i<KNOWLEDGE.length;i++){
+var k=KNOWLEDGE[i];
+if(!byCat[k.cat]) byCat[k.cat]=[];
+byCat[k.cat].push(k);
+}
+var html='';
+for(var cat in byCat){
+html+='<div style="font-size:11px;font-weight:800;color:#6e6e88;letter-spacing:1.5px;text-transform:uppercase;margin:16px 0 8px">'+cat+'</div>';
+for(var j=0;j<byCat[cat].length;j++){
+var k=byCat[cat][j];
+html+='<div class="item"><div class="item-icon">'+k.icon+'</div><div class="item-body"><div class="item-title">'+k.title+'</div><div class="item-desc" style="line-height:1.5;margin-top:3px">'+k.text+'</div></div></div>';
+}
+}
+el.innerHTML=html;
+}
+
+function renderHealth(){
+var el=document.getElementById('healthList');
+if(!el) return;
+var html='';
+for(var i=0;i<HEALTH.length;i++){
+var h=HEALTH[i];
+html+='<div class="item"><div class="item-icon">'+h.icon+'</div><div class="item-body"><div class="item-title">'+h.title+'</div><div class="item-desc" style="line-height:1.5;margin-top:3px">'+h.text+'</div></div></div>';
+}
+el.innerHTML=html;
+}
+
+function renderEsoKb(){
+var el=document.getElementById('esoKbList');
+if(!el) return;
+var html='';
+for(var i=0;i<ESO_KB.length;i++){
+var e=ESO_KB[i];
+html+='<div class="item"><div class="item-icon">🔮</div><div class="item-body"><div class="item-title" style="color:#4facfe">'+e.term+'</div><div class="item-desc" style="line-height:1.5;margin-top:3px">'+e.def+'</div></div></div>';
+}
+el.innerHTML=html;
+}
+
+/* ============ ЕЩЁ ============ */
+function renderMore(){
+renderProfileBox();
+renderReflection();
+renderWins();
+renderGratitude();
+renderInsights();
+renderAnalytics();
+renderSettings();
+}
+
+function renderProfileBox(){
+var el=document.getElementById('profileBox');
+if(!el) return;
+var p=state.profile;
+var rank=getRank();
+var html='<div class="card primary" style="text-align:center;padding:20px">';
+html+='<div style="font-size:60px">'+(p.avatar||'🧘')+'</div>';
+html+='<div style="font-size:20px;font-weight:900;margin-top:8px">'+escapeHtml(p.name||'Путник')+'</div>';
+html+='<div style="font-size:11px;color:#6e6e88;font-weight:700;letter-spacing:1px">'+getTitle()+' · Ур. '+state.level+'</div>';
+html+='<div style="margin-top:12px"><span class="tag gold">'+rank.icon+' '+rank.name+'</span></div>';
+html+='<button class="btn" onclick="openProfile()" style="margin-top:14px">✏️ Редактировать</button>';
+html+='</div>';
+html+='<div class="card" style="padding:12px">';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:#a8a8bd;font-size:12px">Дата рождения</span><b style="font-size:12px">'+(p.birth||'—')+'</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:#a8a8bd;font-size:12px">Рост</span><b style="font-size:12px">'+(p.height?p.height+' см':'—')+'</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0"><span style="color:#a8a8bd;font-size:12px">Вес</span><b style="font-size:12px">'+(p.weight?p.weight+' кг':'—')+'</b></div>';
+html+='</div>';
+el.innerHTML=html;
+}
+
+function renderReflection(){
+var el=document.getElementById('reflectionBox');
+if(!el) return;
+var today=getToday();
+var ex=state.reflection[today];
+var q=ex&&ex.q?ex.q:REFLECT_Q[seedIndex(today+'refl',REFLECT_Q.length)];
+var html='<div class="card primary" style="padding:16px">';
+html+='<div style="font-size:10px;font-weight:800;color:#6e6e88;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:6px">Вопрос дня</div>';
+html+='<div style="font-size:15px;font-weight:900;margin-bottom:12px">'+q+'</div>';
+html+='<textarea id="reflText" placeholder="Напиши ответ..." maxlength="500" style="min-height:100px">'+escapeHtml(ex?ex.a:'')+'</textarea>';
+html+='<button class="btn" onclick="saveRefl()">💾 Сохранить</button>';
+html+='</div>';
+el.innerHTML=html;
+}
+
+function saveRefl(){
+var el=document.getElementById('reflText');
+if(!el) return;
+var v=el.value.trim();
+if(!v){showToast('Напиши');return;}
+var today=getToday();
+var isNew=!state.reflection[today];
+state.reflection[today]={q:REFLECT_Q[seedIndex(today+'refl',REFLECT_Q.length)],a:v};
+saveState();
+if(isNew) addXP(15,'Рефлексия');
+showToast('💭 Сохранено');
+}
+
+function renderWins(){
+var el=document.getElementById('winsBox');
+if(!el) return;
+var today=getToday();
+var wins=state.wins[today]||[];
+var html='<div class="card" style="padding:12px"><div style="display:flex;gap:6px"><input id="winIn" placeholder="Победа дня" style="margin:0;flex:1"><button class="item-btn" onclick="addWin()" style="padding:12px 14px">➕</button></div></div>';
+if(wins.length){
+for(var i=0;i<wins.length;i++){
+html+='<div class="item"><div class="item-icon">🏆</div><div class="item-body"><div style="font-size:13px;font-weight:700">'+escapeHtml(wins[i])+'</div></div><button class="item-btn done" onclick="delWin('+i+')" style="padding:6px 10px">✖</button></div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addWin(){
+var inp=document.getElementById('winIn');
+if(!inp) return;
+var v=inp.value.trim();
+if(!v) return;
+var today=getToday();
+if(!state.wins[today]) state.wins[today]=[];
+state.wins[today].push(v.slice(0,150));
+inp.value='';
+saveState();
+addXP(5,'Победа');
+renderWins();
+}
+
+function delWin(idx){
+var today=getToday();
+if(!state.wins[today]) return;
+state.wins[today].splice(idx,1);
+saveState();
+renderWins();
+}
+
+function renderGratitude(){
+var el=document.getElementById('gratBox');
+if(!el) return;
+var today=getToday();
+var items=state.gratitude[today]||[];
+var html='<div class="card" style="padding:12px"><div style="display:flex;gap:6px"><input id="gratIn" placeholder="За что благодарен" style="margin:0;flex:1"><button class="item-btn" onclick="addGrat()" style="padding:12px 14px">➕</button></div></div>';
+if(items.length){
+for(var i=0;i<items.length;i++){
+html+='<div class="item"><div class="item-icon">🙏</div><div class="item-body"><div style="font-size:13px;font-weight:700">'+escapeHtml(items[i])+'</div></div><button class="item-btn done" onclick="delGrat('+i+')" style="padding:6px 10px">✖</button></div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addGrat(){
+var inp=document.getElementById('gratIn');
+if(!inp) return;
+var v=inp.value.trim();
+if(!v) return;
+var today=getToday();
+if(!state.gratitude[today]) state.gratitude[today]=[];
+state.gratitude[today].push(v.slice(0,150));
+inp.value='';
+saveState();
+addXP(5,'Благодарность');
+renderGratitude();
+}
+
+function delGrat(idx){
+var today=getToday();
+if(!state.gratitude[today]) return;
+state.gratitude[today].splice(idx,1);
+saveState();
+renderGratitude();
+}
+
+function renderInsights(){
+var el=document.getElementById('insightsBox');
+if(!el) return;
+var items=state.insights||[];
+var html='<div class="card" style="padding:12px"><div style="display:flex;gap:6px"><input id="insIn" placeholder="Инсайт" style="margin:0;flex:1"><button class="item-btn" onclick="addInsight()" style="padding:12px 14px">➕</button></div></div>';
+if(items.length){
+for(var i=items.length-1;i>=0;i--){
+html+='<div class="card" style="padding:12px"><div style="font-size:10px;color:#6e6e88;font-weight:800;margin-bottom:4px">'+items[i].date+'</div><div style="font-size:13px;font-weight:700">'+escapeHtml(items[i].text)+'</div></div>';
+}
+}
+el.innerHTML=html;
+}
+
+function addInsight(){
+var inp=document.getElementById('insIn');
+if(!inp) return;
+var v=inp.value.trim();
+if(!v) return;
+if(!state.insights) state.insights=[];
+state.insights.push({date:getToday(),text:v.slice(0,200)});
+inp.value='';
+saveState();
+addXP(10,'Инсайт');
+renderInsights();
+}
+
+function renderAnalytics(){
+var el=document.getElementById('analyticsBox');
+if(!el) return;
+var rank=getRank();
+var html='<div class="card" style="padding:16px">';
+html+='<div style="font-size:13px;color:#6e6e88;font-weight:700;margin-bottom:8px">Всего XP</div>';
+html+='<div class="big-number">'+state.xpEarned+'</div>';
+html+='</div>';
+html+='<div class="card" style="padding:14px">';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#a8a8bd">Практик всего</span><b>'+state.totalPractices+'</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#a8a8bd">Стрик</span><b>'+state.streak+' дн.</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#a8a8bd">Макс. стрик</span><b>'+state.maxStreak+' дн.</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#a8a8bd">Достижений</span><b>'+state.achievements.length+'</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#a8a8bd">Питомцев</span><b>'+state.pets.owned.length+'</b></div>';
+html+='<div style="display:flex;justify-content:space-between;padding:6px 0;font-size:13px"><span style="color:#a8a8bd">Карточек</span><b>'+state.cards.length+'</b></div>';
+html+='</div>';
+el.innerHTML=html;
+}
+
+function renderSettings(){
+var el=document.getElementById('settingsBox');
+if(!el) return;
+var html='<div class="card" style="padding:14px">';
+html+='<div style="font-size:13px;font-weight:800;margin-bottom:10px">🎨 Тема</div>';
+html+='<div class="grid4">';
+for(var i=0;i<THEMES.length;i++){
+var t=THEMES[i];
+html+='<button class="theme-opt '+(state.theme===t.id?'active':'')+'" onclick="pickTheme(\''+t.id+'\')"><span class="ico">'+t.icon+'</span>'+t.name+'</button>';
+}
+html+='</div></div>';
+html+='<div class="card" style="padding:14px">';
+html+='<div style="font-size:13px;font-weight:800;margin-bottom:10px">💾 Данные</div>';
+html+='<button class="btn" onclick="exportData()">📤 Экспорт</button>';
+html+='<button class="btn danger" onclick="resetAll()">🗑 Сбросить всё</button>';
+html+='</div>';
+el.innerHTML=html;
+}
+
+function pickTheme(id){
+state.theme=id;
+saveState();
+document.documentElement.setAttribute('data-theme',id);
+renderSettings();
+showToast('🎨');
+}
+
+function exportData(){
+try{
+var blob=new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+var url=URL.createObjectURL(blob);
+var a=document.createElement('a');
+a.href=url;
+a.download='put16-'+getToday()+'.json';
+document.body.appendChild(a);
+a.click();
+document.body.removeChild(a);
+URL.revokeObjectURL(url);
+showToast('📤 Сохранено');
+}catch(e){showToast('⚠️ Ошибка');}
+}
+
+function resetAll(){
+if(!confirm('Сбросить весь прогресс?')) return;
+if(!confirm('Точно? Данные удалятся.')) return;
+state=defaultState();
+saveState();
+location.reload();
+}
+
+/* ============ SEARCH (упрощённый) ============ */
+function openSearch(){
+var html='<h2>🔍 Поиск</h2>';
+html+='<input id="searchIn" placeholder="Что найти?" oninput="doSearch(this.value)">';
+html+='<div id="searchOut" style="max-height:60vh;overflow-y:auto"></div>';
+html+='<button class="btn ghost" onclick="closeModal()">Закрыть</button>';
+openModal(html);
+setTimeout(function(){var el=document.getElementById('searchIn');if(el) el.focus();},100);
+}
+
+function doSearch(q){
+var out=document.getElementById('searchOut');
+if(!out) return;
+q=q.trim().toLowerCase();
+if(q.length<2){out.innerHTML='<div class="info-text" style="padding:16px;text-align:center">Введи минимум 2 символа</div>';return;}
+var results=[];
+var i;
+for(i=0;i<PRACTICES.length;i++) if(PRACTICES[i].name.toLowerCase().indexOf(q)!==-1) results.push({icon:PRACTICES[i].icon,title:PRACTICES[i].name,cat:'Практика'});
+for(i=0;i<BOOKS.length;i++) if(BOOKS[i].title.toLowerCase().indexOf(q)!==-1) results.push({icon:'📖',title:BOOKS[i].title,cat:'Книга'});
+for(i=0;i<KNOWLEDGE.length;i++) if(KNOWLEDGE[i].title.toLowerCase().indexOf(q)!==-1||KNOWLEDGE[i].text.toLowerCase().indexOf(q)!==-1) results.push({icon:KNOWLEDGE[i].icon,title:KNOWLEDGE[i].title,cat:'Знание'});
+for(i=0;i<HERBS.length;i++) if(HERBS[i].name.toLowerCase().indexOf(q)!==-1) results.push({icon:HERBS[i].icon,title:HERBS[i].name,cat:'Трава'});
+for(i=0;i<ESO_KB.length;i++) if(ESO_KB[i].term.toLowerCase().indexOf(q)!==-1) results.push({icon:'🔮',title:ESO_KB[i].term,cat:'Эзотерика'});
+if(!results.length){out.innerHTML='<div class="info-text" style="padding:16px;text-align:center">Не найдено</div>';return;}
+var html='';
+for(i=0;i<results.length&&i<30;i++){
+var r=results[i];
+html+='<div class="item"><div class="item-icon">'+r.icon+'</div><div class="item-body"><div style="font-size:10px;color:#4facfe;font-weight:800;text-transform:uppercase">'+r.cat+'</div><div class="item-title">'+escapeHtml(r.title)+'</div></div></div>';
+}
+out.innerHTML=html;
+}
+
+/* ============ INIT ============ */
+function hideLoading(){
+var el=document.getElementById('loading');
+if(!el) return;
+el.style.opacity='0';
+setTimeout(function(){el.style.display='none';},400);
+}
+
+function init(){
+try{
+loadState();
+if(state.theme) document.documentElement.setAttribute('data-theme',state.theme);
+renderDaily();
+renderGame();
+updateUI();
+setTimeout(hideLoading,300);
+console.log('🚀 Путь 16 запущен');
+}catch(e){
+console.error('init',e);
+hideLoading();
+}
+}
+
+if(document.readyState==='loading'){
+document.addEventListener('DOMContentLoaded',init);
+}else{
+init();
+}
+
+console.log('✅ Часть 4 загружена');
+</script>
+</body>
+</html>
