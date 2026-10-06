@@ -1,0 +1,83 @@
+{
+  "name": "Путь 16 · Сотворцом",
+  "short_name": "Путь 16",
+  "description": "Приложение для саморазвития: трекинг привычек, практики, эзотерика, природа, знания",
+  "lang": "ru",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait",
+  "background_color": "#05040f",
+  "theme_color": "#05040f",
+  "categories": ["lifestyle", "health", "productivity", "education"],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Практики",
+      "short_name": "Практики",
+      "description": "Открыть список практик",
+      "url": "./index.html?page=practices",
+      "icons": [
+        {
+          "src": "shortcut-practices.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Квесты дня",
+      "short_name": "Квесты",
+      "description": "Открыть квесты дня",
+      "url": "./index.html?page=quests",
+      "icons": [
+        {
+          "src": "shortcut-quests.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Поиск",
+      "short_name": "Поиск",
+      "description": "Найти что угодно",
+      "url": "./index.html?search=1",
+      "icons": [
+        {
+          "src": "shortcut-search.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ]
+}
