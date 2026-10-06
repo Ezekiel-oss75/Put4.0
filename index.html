@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Путь 16 · Тест</title>
+<style>
+body { background: #05040f; color: #fff; font-family: sans-serif; padding: 20px; font-size: 14px; }
+.ok { color: #4cd964; font-weight: bold; margin: 8px 0; }
+.err { color: #ff3b5c; font-weight: bold; margin: 8px 0; }
+.step { color: #a8a8bd; margin: 4px 0; }
+</style>
+</head>
+<body>
+<h2>🧘 Путь 16 · Тест</h2>
+<div id="out"></div>
+
+<script>
+const out = document.getElementById('out');
+function log(msg, cls) {
+  const d = document.createElement('div');
+  d.className = cls || 'step';
+  d.textContent = msg;
+  out.appendChild(d);
+}
+
+window.addEventListener('error', function(e) {
+  log('❌ ОШИБКА: ' + e.message + ' (строка ' + e.lineno + ')', 'err');
+});
+
+try {
+  log('▶️ Начало теста', 'ok');
+
+  // ТЕСТ 1: базовый JS
+  log('✅ JS работает');
+
+  // ТЕСТ 2: localStorage
+  try {
+    localStorage.setItem('test', '1');
+    localStorage.removeItem('test');
+    log('✅ localStorage работает');
+  } catch (e) {
+    log('❌ localStorage НЕ работает: ' + e.message, 'err');
+  }
+
+  // ТЕСТ 3: date
+  const d = new Date();
+  log('✅ Дата: ' + d.toISOString().slice(0,10));
+
+  // ТЕСТ 4: проверяем, что все функции из куска 2 существуют
+  log('--- Проверка функций ядра ---');
+  const coreFns = ['defaultState','getToday','loadState','saveState','addXP','switchCategory','renderPage'];
+  coreFns.forEach(fn => {
+    if (typeof window[fn] === 'function' || typeof eval('typeof ' + fn) === 'function') {
+      log('✅ ' + fn);
+    } else {
+      log('❌ ' + fn + ' — НЕ найдена', 'err');
+    }
+  });
+
+  // ТЕСТ 5: пробуем создать state
+  log('--- Проверка state ---');
+  try {
+    const s = defaultState();
+    log('✅ defaultState() → ' + Object.keys(s).length + ' ключей', 'ok');
+  } catch (e) {
+    log('❌ defaultState() упал: ' + e.message, 'err');
+  }
+
+  // ТЕСТ 6: пробуем загрузить state
+  try {
+    loadState();
+    log('✅ loadState() → уровень ' + state.level + ', XP ' + state.xp, 'ok');
+  } catch (e) {
+    log('❌ loadState() упал: ' + e.message, 'err');
+  }
+
+  // ТЕСТ 7: ищем ключевые DOM-элементы
+  log('--- Проверка DOM ---');
+  const domIds = ['loading','appRoot','subTabs','cardContainer','practicesContainer'];
+  domIds.forEach(id => {
+    if (document.getElementById(id)) {
+      log('✅ #' + id);
+    } else {
+      log('❌ #' + id + ' — НЕ найден в HTML', 'err');
+    }
+  });
+
+  log('🏁 Тест завершён', 'ok');
+} catch (e) {
+  log('❌ КРИТИЧЕСКАЯ ОШИБКА: ' + e.message, 'err');
+}
+</script>
+
+<!-- ДОБАВЬ СЮДА ВСЕ СВОИ СКРИПТЫ (те, что в index.html) -->
+<!-- Пока оставь пустым — просто проверяем базовый HTML -->
+</body>
+</html>
